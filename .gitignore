@@ -1,0 +1,20 @@
+# Archivos de compilación
+target/
+bin/
+*.class
+
+# Archivos de IDEs
+.idea/
+*.iml
+*.project
+*.classpath
+*.settings/
+
+# Dependencias
+*.jar
+*.war
+*.ear
+
+# Configuración del entorno
+.env
+.DS_Store
