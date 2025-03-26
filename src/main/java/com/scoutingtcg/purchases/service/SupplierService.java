@@ -24,7 +24,11 @@ public class SupplierService {
     return supplierRepository.findById(id);
   }
 
-  public Supplier saveSupplier(Supplier supplier) {
+  public Supplier saveOrUpdateSupplier(Supplier supplier) {
+    return supplierRepository.save(supplier);
+  }
+
+  public Supplier updateSupplier(Supplier supplier) {
     return supplierRepository.save(supplier);
   }
 

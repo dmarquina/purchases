@@ -31,7 +31,12 @@ public class SupplierController {
 
   @PostMapping
   public Supplier createSupplier(@RequestBody Supplier supplier) {
-    return supplierService.saveSupplier(supplier);
+    return supplierService.saveOrUpdateSupplier(supplier);
+  }
+
+  @PutMapping
+  public Supplier updateSupplier(@RequestBody Supplier supplier) {
+    return supplierService.saveOrUpdateSupplier(supplier);
   }
 
   @DeleteMapping("/{id}")
