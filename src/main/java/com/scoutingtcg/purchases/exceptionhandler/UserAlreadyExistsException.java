@@ -6,7 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserAlreadyExistsException extends ResponseStatusException {
 
     public UserAlreadyExistsException() {
-        super(HttpStatus.CONFLICT, "Error: No se pudo hacer la creación, este correo ya existe.");
+        super(HttpStatus.CONFLICT, "No se pudo hacer la creación, este correo ya existe.");
     }
 
 

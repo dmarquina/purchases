@@ -32,7 +32,12 @@ public class ProductController {
 
     @PostMapping
     public Product createProduct(@RequestBody Product product) {
-        return productService.saveProduct(product);
+        return productService.saveOrUpdateProduct(product);
+    }
+
+    @PutMapping
+    public Product updateProduct(@RequestBody Product product) {
+        return productService.saveOrUpdateProduct(product);
     }
 
     @DeleteMapping("/{id}")

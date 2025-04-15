@@ -10,3 +10,7 @@ spring:
       generate-ddl: true
       dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+server:
+  port: 8443
+  ssl:
+    enabled: false

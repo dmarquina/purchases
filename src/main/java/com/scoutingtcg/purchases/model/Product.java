@@ -18,18 +18,12 @@ public class Product {
 
     private String productName;
     private Double currentPrice;
-    private Double purchasePrice;
-    private Boolean preOrder;
     private Integer stock;
     private String imageUrl;
     private String franchise;
     private String presentation;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    @ManyToOne
-    @JoinColumn(name = "supplier_id")
-    private Supplier supplier;
 
     @PrePersist
     protected void onCreate() {
