@@ -15,8 +15,9 @@ public class User {
     private Long userId;
     private String name;
     private String lastName;
-    private String userName;
     private String email;
     private String password;
-
+    private String phone;
+    private String role;
+    //TODO: Manage address later when we have to develop the checkout
 }

@@ -1,12 +1,14 @@
 package com.scoutingtcg.purchases.controller;
 
+import com.scoutingtcg.purchases.dto.Product.StoreProductResponse;
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.service.ProductService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
@@ -26,18 +28,20 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
-          .map(ResponseEntity::ok)
-          .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.saveOrUpdateProduct(product);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Product createProduct(@RequestPart("product") Product product,
+                                 @RequestPart("file") MultipartFile file) {
+        return productService.createProduct(product, file);
     }
 
-    @PutMapping
-    public Product updateProduct(@RequestBody Product product) {
-        return productService.saveOrUpdateProduct(product);
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Product updateProduct(@RequestPart("product") Product product,
+                                 @RequestPart(value = "file", required = false) MultipartFile file) {
+        return productService.updateProduct(product, file);
     }
 
     @DeleteMapping("/{id}")
@@ -45,4 +49,5 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
+
 }
