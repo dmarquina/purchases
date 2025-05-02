@@ -45,24 +45,10 @@ public class ProductService {
         return products;
     }
 
-
     public StoreProductResponse getStoreProducts(String franchise) {
         List<Product> singleProducts = productRepository.findTop5ByFranchiseAndPresentation(franchise, "Single");
         List<Product> sealedProducts = productRepository.findTop5ByFranchiseAndPresentationNot(franchise, "Single");
 
-        for (Product product : singleProducts) {
-            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                String preSignedUrl = s3ClientService.preSignUrl(product.getCoverImageUrl());
-                product.setCoverImageUrl(preSignedUrl);
-            }
-        }
-
-        for (Product product : sealedProducts) {
-            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                String preSignedUrl = s3ClientService.preSignUrl(product.getCoverImageUrl());
-                product.setCoverImageUrl(preSignedUrl);
-            }
-        }
         StoreProductResponse storeProductResponse = new StoreProductResponse();
         storeProductResponse.setSingleProducts(singleProducts);
         storeProductResponse.setSealedProducts(sealedProducts);
@@ -71,28 +57,11 @@ public class ProductService {
     }
 
     public Page<Product> getSingleProducts(String franchise, Pageable pageable) {
-        Page<Product> productPage = productRepository.findByFranchiseAndPresentation(franchise, "Single", pageable);
-        productPage.get().forEach(product -> {
-            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                String preSignedUrl = s3ClientService.preSignUrl(product.getCoverImageUrl());
-                product.setCoverImageUrl(preSignedUrl);
-            }
-        });
-
-        return productPage;
+        return productRepository.findByFranchiseAndPresentation(franchise, "Single", pageable);
     }
 
     public Page<Product> getSealedProducts(String franchise, Pageable pageable) {
-        Page<Product> productPage = productRepository.findByFranchiseAndPresentationNot(franchise, "Single", pageable);
-
-        productPage.get().forEach(product -> {
-            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                String preSignedUrl = s3ClientService.preSignUrl(product.getCoverImageUrl());
-                product.setCoverImageUrl(preSignedUrl);
-            }
-        });
-
-        return productPage;
+        return productRepository.findByFranchiseAndPresentationNot(franchise, "Single", pageable);
     }
 
     public Optional<Product> getProductById(Long id) {
@@ -137,7 +106,7 @@ public class ProductService {
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
             String imageUrl = s3ClientService.uploadFile(fileName, file.getInputStream(), file.getContentType());
             product.setCoverImageUrl(imageUrl);
-
+            product.setStock(0);
             Product savedProduct = productRepository.save(product);
 
             ProductImage productImage = new ProductImage();
