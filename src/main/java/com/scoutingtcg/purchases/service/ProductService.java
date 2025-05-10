@@ -1,7 +1,5 @@
 package com.scoutingtcg.purchases.service;
 
-import com.scoutingtcg.purchases.dto.Product.StoreProductResponse;
-import com.scoutingtcg.purchases.model.Franchise;
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.model.ProductImage;
 import com.scoutingtcg.purchases.repository.ProductImageRepository;
@@ -43,21 +41,6 @@ public class ProductService {
         }
 
         return products;
-    }
-
-    public StoreProductResponse getStoreProducts(String franchise) {
-        List<Product> singleProducts = productRepository.findTop5ByFranchiseAndPresentation(franchise, "Single");
-        List<Product> sealedProducts = productRepository.findTop5ByFranchiseAndPresentationNot(franchise, "Single");
-
-        StoreProductResponse storeProductResponse = new StoreProductResponse();
-        storeProductResponse.setSingleProducts(singleProducts);
-        storeProductResponse.setSealedProducts(sealedProducts);
-
-        return storeProductResponse;
-    }
-
-    public Page<Product> getSingleProducts(String franchise, Pageable pageable) {
-        return productRepository.findByFranchiseAndPresentation(franchise, "Single", pageable);
     }
 
     public Page<Product> getSealedProducts(String franchise, Pageable pageable) {

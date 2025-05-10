@@ -1,13 +1,17 @@
 package com.scoutingtcg.purchases.controller;
 
-import com.scoutingtcg.purchases.dto.CardForSale.PokemonSingleResponse;
+import com.scoutingtcg.purchases.dto.CardForSale.PokemonFilterOptionsResponse;
+import com.scoutingtcg.purchases.dto.CardForSale.PokemonSinglesFilterRequest;
+import com.scoutingtcg.purchases.dto.CardForSale.PokemonSinglesPageResponse;
 import com.scoutingtcg.purchases.service.CardForSaleService;
 import org.apache.commons.csv.CSVRecord;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,13 +28,14 @@ public class CardForSaleController {
         this.cardForSaleService = cardForSaleService;
     }
 
+    // Subir CSV
     @PostMapping("/upload-cards")
     public ResponseEntity<?> uploadCards(@RequestParam("file") MultipartFile file) {
         try {
             List<CSVRecord> failedRows = cardForSaleService.processCsv(file.getInputStream());
 
             if (failedRows.isEmpty()) {
-                return ResponseEntity.noContent().build(); // 204
+                return ResponseEntity.noContent().build();
             }
 
             byte[] errorCsv = cardForSaleService.generateErrorCsv(failedRows);
@@ -46,12 +51,18 @@ public class CardForSaleController {
         }
     }
 
-    @GetMapping("/pokemon")
-    public Page<PokemonSingleResponse> getPokemonSingles(
+    @PostMapping("/pokemon")
+    public PokemonSinglesPageResponse getPokemonSingles(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestBody PokemonSinglesFilterRequest filters
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return cardForSaleService.getPokemonSingles(pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        return cardForSaleService.getPokemonSingles(filters, pageable);
+    }
+
+    @GetMapping("/pokemon/filters")
+    public PokemonFilterOptionsResponse getPokemonCardFilters() {
+        return cardForSaleService.getFilterOptions();
     }
 }

@@ -1,5 +1,6 @@
 package com.scoutingtcg.purchases.model;
 
+import ch.qos.logback.core.status.Status;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,6 +25,8 @@ public class CardForSale {
     private String cardCondition; // Near Mint, Lightly Played, etc.
     private Double price;
     private Integer stock;
+    @Enumerated(EnumType.STRING)
+    private CardForSaleStatus status; // ACTIVE, INACTIVE, PENDING
 
     @CreationTimestamp
     @Column(updatable = false)

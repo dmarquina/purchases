@@ -29,7 +29,7 @@ public class PurchaseService {
   public Purchase savePurchase(Purchase purchase) {
     Product product = productRepository.findById(purchase.getProduct().getProductId())
       .orElseThrow(() -> new RuntimeException("Product not found"));
-    //TODO: Mejorar performance, podiras solo manejar ids de productos, no objetos completos y de supplier
+    //TODO: Mejorar performance, podrias solo manejar ids de productos, no objetos completos y de supplier
     product.setStock(product.getStock() + purchase.getQuantity());
     productRepository.save(product);
     return purchaseRepository.save(purchase);

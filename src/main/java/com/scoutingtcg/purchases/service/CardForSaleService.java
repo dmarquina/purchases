@@ -1,13 +1,10 @@
 package com.scoutingtcg.purchases.service;
 
-import com.scoutingtcg.purchases.dto.CardForSale.CardForSaleWithPokemonCardDto;
-import com.scoutingtcg.purchases.dto.CardForSale.PokemonSingleResponse;
-import com.scoutingtcg.purchases.dto.CardForSale.PokemonSingleVariantResponse;
-import com.scoutingtcg.purchases.model.CardForSale;
-import com.scoutingtcg.purchases.model.Franchise;
-import com.scoutingtcg.purchases.model.PokemonCard;
+import com.scoutingtcg.purchases.dto.CardForSale.*;
+import com.scoutingtcg.purchases.model.*;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.PokemonCardRepository;
+import com.scoutingtcg.purchases.util.PageUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -16,12 +13,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,10 +24,12 @@ public class CardForSaleService {
 
     private final CardForSaleRepository cardForSaleRepository;
     private final PokemonCardRepository pokemonCardRepository;
+    private final PokemonCardPriceService pokemonCardPriceService;
 
-    public CardForSaleService(CardForSaleRepository cardForSaleRepository, PokemonCardRepository pokemonCardRepository) {
+    public CardForSaleService(CardForSaleRepository cardForSaleRepository, PokemonCardRepository pokemonCardRepository, PokemonCardPriceService pokemonCardPriceService) {
         this.cardForSaleRepository = cardForSaleRepository;
         this.pokemonCardRepository = pokemonCardRepository;
+        this.pokemonCardPriceService = pokemonCardPriceService;
     }
 
     public List<CSVRecord> processCsv(InputStream is) throws IOException {
@@ -42,20 +39,22 @@ public class CardForSaleService {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                 CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)
         ) {
+            List<CardForSale> cardForSales = new ArrayList<>();
             for (CSVRecord row : parser) {
                 try {
-                    processRow(row);
+                    cardForSales.add(rowToCardForSale(row));
                 } catch (Exception e) {
                     System.err.printf("Error processing row %d: %s%n", row.getRecordNumber(), e.getMessage());
                     failedRows.add(row);
                 }
             }
+            pokemonCardPriceService.setCardForSalePrices(cardForSales);
         }
 
         return failedRows;
     }
 
-    private void processRow(CSVRecord row) {
+    private CardForSale rowToCardForSale(CSVRecord row) {
         String name = row.get("Name").trim();
         String rawSet = row.get("Set").trim();
         String rawSetId = rawSet.split(":")[0].toLowerCase().trim();
@@ -78,7 +77,8 @@ public class CardForSaleService {
         if (existing.isPresent()) {
             CardForSale cfs = existing.get();
             cfs.setStock(cfs.getStock() + quantity);
-            cardForSaleRepository.save(cfs);
+            cfs.setStatus(CardForSaleStatus.PENDING);
+            return cardForSaleRepository.save(cfs);
         } else {
             CardForSale newCfs = new CardForSale();
             newCfs.setCardId(card.getId());
@@ -87,7 +87,8 @@ public class CardForSaleService {
             newCfs.setPrinting(printing);
             newCfs.setStock(quantity);
             newCfs.setPrice(0.0);
-            cardForSaleRepository.save(newCfs);
+            newCfs.setStatus(CardForSaleStatus.PENDING);
+            return cardForSaleRepository.save(newCfs);
         }
     }
 
@@ -113,14 +114,38 @@ public class CardForSaleService {
         }
     }
 
-    public Page<PokemonSingleResponse> getPokemonSingles(Pageable pageable) {
-        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findWithPokemonCard(pageable);
-        long total = cardForSaleRepository.countAllWithPokemonCard();
 
+    public PokemonSinglesPageResponse getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
+        Page<String> pagedCardIds = cardForSaleRepository.findFilteredCardIdsWithPagination(
+                filters.sets().isEmpty() ? null : filters.sets(),
+                filters.conditions().isEmpty() ? null : filters.conditions(),
+                filters.printings().isEmpty() ? null : filters.printings(),
+                filters.name() == null || filters.name().isBlank() ? null : filters.name(),
+                pageable
+        );
+
+        List<String> cardIds = pagedCardIds.getContent();
+        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findByCardIdIn(cardIds);
+        List<PokemonSingleResponse> responses = getPokemonSingleResponses(data);
+
+        return new PokemonSinglesPageResponse(
+                responses,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pagedCardIds.getTotalElements(),
+                pagedCardIds.getTotalPages(),
+                pagedCardIds.isLast()
+        );
+    }
+
+
+
+
+    private static List<PokemonSingleResponse> getPokemonSingleResponses(List<CardForSaleWithPokemonCardDto> data) {
         Map<String, List<CardForSaleWithPokemonCardDto>> grouped = data.stream()
                 .collect(Collectors.groupingBy(dto -> dto.getCardForSale().getCardId()));
 
-        List<PokemonSingleResponse> responses = grouped.entrySet().stream()
+        return grouped.entrySet().stream()
                 .map(entry -> {
                     CardForSaleWithPokemonCardDto base = entry.getValue().get(0);
                     PokemonCard card = base.getPokemonCard();
@@ -132,6 +157,7 @@ public class CardForSaleService {
                                         cfs.getId(),
                                         cfs.getCardCondition(),
                                         cfs.getPrinting(),
+                                        cfs.getFranchise().name(),
                                         cfs.getPrice(),
                                         cfs.getStock()
                                 );
@@ -144,11 +170,33 @@ public class CardForSaleService {
                             .setName(card.getSetId().toUpperCase() + ": " + card.getSetName())
                             .rarity(card.getRarity())
                             .number(card.getNumber())
+                            .franchise(Franchise.POKEMON.name())
                             .variants(variants)
                             .build();
                 })
                 .toList();
-
-        return new PageImpl<>(responses, pageable, total);
     }
+
+    public PokemonFilterOptionsResponse getFilterOptions() {
+        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findAllCardForSaleWithPokemonCard();
+
+        Set<SetOption> sets = new HashSet<>();
+        Set<String> conditions = new HashSet<>();
+        Set<String> printings = new HashSet<>();
+
+        for (CardForSaleWithPokemonCardDto dto : data) {
+            PokemonCard card = dto.getPokemonCard();
+            sets.add(new SetOption(card.getSetId(), card.getSetName()));
+            conditions.add(dto.getCardForSale().getCardCondition());
+            printings.add(dto.getCardForSale().getPrinting());
+        }
+
+        return new PokemonFilterOptionsResponse(
+                new ArrayList<>(sets),
+                new ArrayList<>(conditions),
+                new ArrayList<>(printings)
+        );
+    }
+
+
 }

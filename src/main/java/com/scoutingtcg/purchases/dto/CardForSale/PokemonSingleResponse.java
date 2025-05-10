@@ -16,5 +16,6 @@ public class PokemonSingleResponse {
     String setName;
     String rarity;
     String number;
+    String franchise;
     List<PokemonSingleVariantResponse> variants;
 }

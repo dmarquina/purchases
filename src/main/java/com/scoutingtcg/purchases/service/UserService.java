@@ -31,7 +31,7 @@ public class UserService{
     }
 
     public User createUser(CreateUserRequest createUserRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail()).stream().findFirst();
+        Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail());
         if(userOptional.isEmpty()){
             User user = new User();
             user.setEmail(createUserRequest.getEmail());

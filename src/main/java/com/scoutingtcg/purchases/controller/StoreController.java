@@ -1,8 +1,11 @@
 package com.scoutingtcg.purchases.controller;
 
+import com.scoutingtcg.purchases.dto.CardForSale.PokemonCardMarketPriceDto;
 import com.scoutingtcg.purchases.dto.Product.StoreProductResponse;
 import com.scoutingtcg.purchases.model.Product;
+import com.scoutingtcg.purchases.service.PokemonCardPriceService;
 import com.scoutingtcg.purchases.service.ProductService;
+import com.scoutingtcg.purchases.service.StoreService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,25 +21,17 @@ import java.util.List;
 public class StoreController {
 
     private final ProductService productService;
-
-    public StoreController(ProductService productService) {
+    private final StoreService storeService;
+    public StoreController(ProductService productService, StoreService storeService, PokemonCardPriceService pokemonCardPriceService) {
         this.productService = productService;
+        this.storeService = storeService;
     }
 
     @GetMapping("/franchise/{franchise}")
     public StoreProductResponse getStoreProducts(@PathVariable String franchise) {
-        return productService.getStoreProducts(franchise);
+        return storeService.getStoreProducts(franchise);
     }
 
-    @GetMapping("/franchise/{franchise}/singles")
-    public Page<Product> getSingleProducts(
-            @PathVariable String franchise,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        return productService.getSingleProducts(franchise, pageable);
-    }
 
     @GetMapping("/franchise/{franchise}/sealed")
     public Page<Product> getSealedProducts(

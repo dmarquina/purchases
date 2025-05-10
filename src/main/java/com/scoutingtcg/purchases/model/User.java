@@ -7,7 +7,7 @@ import lombok.ToString;
 @Data
 @ToString
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 public class User {
 
     @Id
@@ -15,9 +15,9 @@ public class User {
     private Long userId;
     private String name;
     private String lastName;
+    @Column(nullable = false, unique = true)
     private String email;
     private String password;
     private String phone;
     private String role;
-    //TODO: Manage address later when we have to develop the checkout
 }
