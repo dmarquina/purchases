@@ -38,7 +38,7 @@ public class StoreService {
             pokemonSingleResponseList = getPokemonSingleResponses(variants);
         }
 
-        List<Product> sealedProducts = productRepository.findTop5ByFranchiseAndPresentationNot(franchise, "Single");
+        List<Product> sealedProducts = productRepository.findTop5ByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", 0);
 
         StoreProductResponse storeProductResponse = new StoreProductResponse();
         storeProductResponse.setSingleProducts(pokemonSingleResponseList);

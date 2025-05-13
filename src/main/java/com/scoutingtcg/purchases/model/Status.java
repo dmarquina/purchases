@@ -1,6 +1,6 @@
 package com.scoutingtcg.purchases.model;
 
-public enum CardForSaleStatus {
+public enum Status {
     ACTIVE,
     INACTIVE,
     PENDING

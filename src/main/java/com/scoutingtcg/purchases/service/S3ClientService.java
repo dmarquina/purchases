@@ -1,6 +1,7 @@
 package com.scoutingtcg.purchases.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -28,15 +29,22 @@ public class S3ClientService {
     @Value("${aws.s3.region}")
     private String region;
 
-    @Value("${aws.s3.bucketName}")
-    private String bucketName;
+    @Getter
+    @Value("${aws.s3.buckets.receipts}")
+    private String receiptsBucket;
+
+    @Getter
+    @Value("${aws.s3.buckets.pokemon}")
+    private String pokemonBucket;
+
+    @Getter
+    @Value("${aws.s3.buckets.products}")
+    private String productsBucket;
 
     @Value("${aws.s3.endpoint}")
     private String endpoint;
 
     private S3Client s3Client;
-
-    private S3Presigner s3Presigner;
 
     @PostConstruct
     public void init() {
@@ -47,15 +55,9 @@ public class S3ClientService {
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .build();
 
-        this.s3Presigner = S3Presigner.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)
-                ))
-                .build();
     }
 
-    public String uploadFile(String fileName, InputStream inputStream, String contentType) {
+    public String uploadFile(String bucketName, String fileName, InputStream inputStream, String contentType) {
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
@@ -72,7 +74,7 @@ public class S3ClientService {
         }
     }
 
-    public void deleteFile(String urlImage) {
+    public void deleteFile(String bucketName, String urlImage) {
         String key = extractKeyFromUrl(urlImage);
 
         try {
@@ -85,22 +87,6 @@ public class S3ClientService {
         } catch (S3Exception e) {
             throw new RuntimeException("Error al eliminar archivo de S3: " + e.getMessage(), e);
         }
-    }
-
-    public String preSignUrl(String urlImage) {
-        String key = extractKeyFromUrl(urlImage);
-
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest preSignRequest = GetObjectPresignRequest.builder()
-                .getObjectRequest(getObjectRequest)
-                .signatureDuration(Duration.ofMinutes(1))
-                .build();
-
-        return s3Presigner.presignGetObject(preSignRequest).url().toString();
     }
 
     private String extractKeyFromUrl(String url) {

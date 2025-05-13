@@ -32,7 +32,6 @@ public class StoreController {
         return storeService.getStoreProducts(franchise);
     }
 
-
     @GetMapping("/franchise/{franchise}/sealed")
     public Page<Product> getSealedProducts(
             @PathVariable String franchise,

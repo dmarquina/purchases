@@ -4,16 +4,13 @@ import com.scoutingtcg.purchases.dto.CardForSale.*;
 import com.scoutingtcg.purchases.model.*;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.PokemonCardRepository;
-import com.scoutingtcg.purchases.util.PageUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Sort;
 
 import java.io.*;
 import java.util.*;
@@ -77,7 +74,7 @@ public class CardForSaleService {
         if (existing.isPresent()) {
             CardForSale cfs = existing.get();
             cfs.setStock(cfs.getStock() + quantity);
-            cfs.setStatus(CardForSaleStatus.PENDING);
+            cfs.setStatus(Status.PENDING);
             return cardForSaleRepository.save(cfs);
         } else {
             CardForSale newCfs = new CardForSale();
@@ -87,7 +84,7 @@ public class CardForSaleService {
             newCfs.setPrinting(printing);
             newCfs.setStock(quantity);
             newCfs.setPrice(0.0);
-            newCfs.setStatus(CardForSaleStatus.PENDING);
+            newCfs.setStatus(Status.PENDING);
             return cardForSaleRepository.save(newCfs);
         }
     }
@@ -114,7 +111,6 @@ public class CardForSaleService {
         }
     }
 
-
     public PokemonSinglesPageResponse getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
         Page<String> pagedCardIds = cardForSaleRepository.findFilteredCardIdsWithPagination(
                 filters.sets().isEmpty() ? null : filters.sets(),
@@ -137,8 +133,6 @@ public class CardForSaleService {
                 pagedCardIds.isLast()
         );
     }
-
-
 
 
     private static List<PokemonSingleResponse> getPokemonSingleResponses(List<CardForSaleWithPokemonCardDto> data) {

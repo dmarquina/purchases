@@ -28,7 +28,6 @@ public class CardForSaleController {
         this.cardForSaleService = cardForSaleService;
     }
 
-    // Subir CSV
     @PostMapping("/upload-cards")
     public ResponseEntity<?> uploadCards(@RequestParam("file") MultipartFile file) {
         try {

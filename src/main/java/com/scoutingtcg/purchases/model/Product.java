@@ -1,12 +1,9 @@
 package com.scoutingtcg.purchases.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -26,7 +23,8 @@ public class Product {
     private String presentation;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    @Enumerated(EnumType.STRING)
+    private Status status; // ACTIVE, INACTIVE, PENDING
 
     @PrePersist
     protected void onCreate() {

@@ -22,29 +22,23 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
 
+    private final String productBucketName;
+
     public ProductService(ProductRepository productRepository,
                           S3ClientService s3ClientService,
                           ProductImageRepository productImageRepository) {
         this.productRepository = productRepository;
         this.s3ClientService = s3ClientService;
         this.productImageRepository = productImageRepository;
+        this.productBucketName = s3ClientService.getProductsBucket();
     }
 
     public List<Product> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-
-        for (Product product : products) {
-            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                String preSignedUrl = s3ClientService.preSignUrl(product.getCoverImageUrl());
-                product.setCoverImageUrl(preSignedUrl);
-            }
-        }
-
-        return products;
+        return productRepository.findAll();
     }
 
     public Page<Product> getSealedProducts(String franchise, Pageable pageable) {
-        return productRepository.findByFranchiseAndPresentationNot(franchise, "Single", pageable);
+        return productRepository.findByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", pageable,0);
     }
 
     public Optional<Product> getProductById(Long id) {
@@ -62,7 +56,7 @@ public class ProductService {
 
         if (file != null && !file.isEmpty()) {
             if (product1WithOldImage.getCoverImageUrl() != null && !product1WithOldImage.getCoverImageUrl().isEmpty()) {
-                s3ClientService.deleteFile(product1WithOldImage.getCoverImageUrl());
+                s3ClientService.deleteFile(productBucketName, product1WithOldImage.getCoverImageUrl());
             }
             return saveProductAndHandleImageUpload(product, file);
         } else {
@@ -77,7 +71,7 @@ public class ProductService {
         productRepository.findById(id)
                 .ifPresent(product -> {
                     if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
-                        s3ClientService.deleteFile(product.getCoverImageUrl());
+                        s3ClientService.deleteFile(productBucketName, product.getCoverImageUrl());
                     }
                     productImageRepository.deleteAllByProduct(product);
                     productRepository.deleteById(id);
@@ -87,7 +81,7 @@ public class ProductService {
     public Product saveProductAndHandleImageUpload(Product product, MultipartFile file) {
         try {
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-            String imageUrl = s3ClientService.uploadFile(fileName, file.getInputStream(), file.getContentType());
+            String imageUrl = s3ClientService.uploadFile(productBucketName, fileName, file.getInputStream(), file.getContentType());
             product.setCoverImageUrl(imageUrl);
             product.setStock(0);
             Product savedProduct = productRepository.save(product);

@@ -14,4 +14,9 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getStatusCode().value(), ex.getReason());
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<String> handleStockError(InsufficientStockException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }

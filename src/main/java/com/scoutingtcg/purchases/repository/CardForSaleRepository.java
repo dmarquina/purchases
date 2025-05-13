@@ -63,7 +63,6 @@ public interface CardForSaleRepository extends JpaRepository<CardForSale, Long> 
     List<String> findTop4CardIdsByFranchisePokemon(Pageable pageable);
 
 
-    // Para obtener los datos DTO luego de filtrar IDs
     @Query("""
                 SELECT new com.scoutingtcg.purchases.dto.CardForSale.CardForSaleWithPokemonCardDto(c, p)
                 FROM CardForSale c

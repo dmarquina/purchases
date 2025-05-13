@@ -13,7 +13,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String email; // optional fallback
+    private String email;
     private String fullName;
     private String address;
     private String apartment;
@@ -21,10 +21,12 @@ public class Order {
     private String state;
     private String zip;
     private Double total;
+    private String receiptUrl;
+    private OrderStatus status;
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user; // Referencia futura al usuario registrado o generado
+    private User user;
 
 }

@@ -34,10 +34,6 @@ public class PurchaseController {
     return purchaseService.savePurchase(purchase);
   }
 
-  @PatchMapping("/{purchaseId}/status")
-  public void updatePurchaseStatus(@PathVariable Long purchaseId) {
-    purchaseService.updatePurchaseStatus(purchaseId);
-  }
   @PutMapping
   public Purchase updatePurchase(@RequestBody Purchase purchase) {
     return purchaseService.updatePurchase(purchase);

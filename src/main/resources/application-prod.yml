@@ -14,3 +14,13 @@ server:
   port: 8443
   ssl:
     enabled: false
+
+aws:
+  s3:
+    access-key: ${AWS_S3_ACCESS_KEY}
+    secret-key: ${AWS_S3_SECRET_KEY}
+    region: ${AWS_S3_REGION}
+    productsBucketName: ${AWS_S3_PRODUCTS_BUCKET_NAME}
+    pokemonBucketName: ${AWS_S3_POKEMON_BUCKET_NAME}
+    receiptBucketName: ${AWS_S3_RECEIPT_BUCKET_NAME}
+    endpoint: ${AWS_S3_ENDPOINT}

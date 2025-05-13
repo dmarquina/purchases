@@ -4,7 +4,6 @@ import com.scoutingtcg.purchases.dto.CardForSale.CardForSaleWithPokemonCardDto;
 import com.scoutingtcg.purchases.dto.CardForSale.PokemonCardApiResponse;
 import com.scoutingtcg.purchases.dto.CardForSale.PokemonCardMarketPriceDto;
 import com.scoutingtcg.purchases.model.CardForSale;
-import com.scoutingtcg.purchases.model.CardForSaleStatus;
 import com.scoutingtcg.purchases.model.PokemonCardMarketPrice;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.PokemonCardMarketPriceRepository;

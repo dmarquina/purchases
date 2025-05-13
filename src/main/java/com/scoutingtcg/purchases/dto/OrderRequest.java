@@ -5,7 +5,7 @@ import java.util.List;
 
 @Data
 public class OrderRequest {
-    private Long userId; // para el futuro
+    private Long userId;
     private String email;
     private String fullName;
     private String address;

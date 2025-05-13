@@ -29,8 +29,6 @@ public class Purchase {
   private Product product;
 
   private LocalDate date;
-  private String status;
-  private Double deposit;
   private Double totalCost;
   private Integer quantity;
 }

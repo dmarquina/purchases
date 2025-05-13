@@ -2,6 +2,7 @@ package com.scoutingtcg.purchases.service;
 
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.model.Purchase;
+import com.scoutingtcg.purchases.model.Status;
 import com.scoutingtcg.purchases.model.Supplier;
 import com.scoutingtcg.purchases.repository.ProductRepository;
 import com.scoutingtcg.purchases.repository.PurchaseRepository;
@@ -29,27 +30,9 @@ public class PurchaseService {
   public Purchase savePurchase(Purchase purchase) {
     Product product = productRepository.findById(purchase.getProduct().getProductId())
       .orElseThrow(() -> new RuntimeException("Product not found"));
-    //TODO: Mejorar performance, podrias solo manejar ids de productos, no objetos completos y de supplier
     product.setStock(product.getStock() + purchase.getQuantity());
     productRepository.save(product);
     return purchaseRepository.save(purchase);
-  }
-
-
-  public void updatePurchaseStatus(Long purchaseId) {
-    Purchase purchase = purchaseRepository.findById(purchaseId)
-            .orElseThrow(() -> new RuntimeException("Purchase not found"));
-
-    if (purchase.getStatus() == null) {
-      purchase.setStatus("PENDIENTE");
-    } else if (purchase.getStatus().equals("PENDIENTE")) {
-      purchase.setStatus("PAGADO");
-    } else if (purchase.getStatus().equals("PAGADO")) {
-      purchase.setStatus("RECIBIDO");
-    } else {
-      throw new RuntimeException("Invalid status");
-    }
-    purchaseRepository.save(purchase);
   }
 
   public Purchase updatePurchase(Purchase purchase) {
