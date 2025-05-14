@@ -205,7 +205,7 @@ public class OrderService {
                 newUser.setName(nameParts[0]);
                 newUser.setLastName(nameParts.length > 1 ? nameParts[1] : "");
                 newUser.setPassword("");
-                newUser.setPhone("");
+                newUser.setPhone(request.getPhone());
                 newUser.setRole(Role.USER.name());
                 userRepository.save(newUser);
                 order.setUser(newUser);

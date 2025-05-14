@@ -39,4 +39,6 @@ aws:
       products: ${AWS_S3_PRODUCTS_ENDPOINT}
       pokemon: ${AWS_S3_POKEMON_ENDPOINT}
       receipts: ${AWS_S3_RECEIPTS_ENDPOINT}
-
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000 # 1 day

@@ -1,6 +1,7 @@
 package com.scoutingtcg.purchases.service;
 
 import com.scoutingtcg.purchases.dto.User.CreateUserRequest;
+import com.scoutingtcg.purchases.dto.User.LoggedUserResponse;
 import com.scoutingtcg.purchases.dto.User.LoginUserRequest;
 import com.scoutingtcg.purchases.dto.User.UpdateUserRequest;
 import com.scoutingtcg.purchases.exceptionhandler.UserAlreadyExistsException;
@@ -8,54 +9,93 @@ import com.scoutingtcg.purchases.exceptionhandler.UserDoesntExistException;
 import com.scoutingtcg.purchases.model.Role;
 import com.scoutingtcg.purchases.model.User;
 import com.scoutingtcg.purchases.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-public class UserService{
+public class UserService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public User getUser(LoginUserRequest loginUserRequest) {
-        String email = loginUserRequest.getEmail();
-        String password = loginUserRequest.getPassword();
-        Optional<User> userOptional = userRepository.findByEmailAndPassword(email,password).stream().findFirst();
-        if(userOptional.isPresent()){
-            return userOptional.get();
-        } else {
-            throw new UserDoesntExistException();
-        }
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
-    public User createUser(CreateUserRequest createUserRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail());
-        if(userOptional.isEmpty()){
-            User user = new User();
-            user.setEmail(createUserRequest.getEmail());
-            user.setName(createUserRequest.getName());
-            user.setLastName(createUserRequest.getLastName());
-            user.setPassword(createUserRequest.getPassword());
-            user.setRole(Role.USER.name());
-            return userRepository.save(user);
+public LoggedUserResponse login(LoginUserRequest request) {
+    User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        throw new BadCredentialsException("Invalid credentials");
+    }
+
+    String token = jwtService.generateToken(user.getEmail());
+    return mapToLoggedUserResponse(user, token);
+}
+
+public LoggedUserResponse createUser(CreateUserRequest createUserRequest) {
+    Optional<User> userOptional = userRepository.findByEmail(createUserRequest.getEmail());
+    if (userOptional.isEmpty()) {
+        User user = new User();
+        user.setEmail(createUserRequest.getEmail());
+        user.setName(createUserRequest.getName());
+        user.setLastName(createUserRequest.getLastName());
+        String encodedPassword = passwordEncoder.encode(createUserRequest.getPassword());
+        user.setPassword(encodedPassword);
+        user.setRole(Role.USER.name());
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user.getEmail());
+        return mapToLoggedUserResponse(user, token);
+    } else {
+        User existingUser = userOptional.get();
+        if (existingUser.getPassword() == null || existingUser.getPassword().isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(createUserRequest.getPassword());
+            existingUser.setPassword(encodedPassword);
+            userRepository.save(existingUser);
+
+            String token = jwtService.generateToken(existingUser.getEmail());
+            return mapToLoggedUserResponse(existingUser, token);
         } else {
             throw new UserAlreadyExistsException();
         }
     }
+}
 
-    public User updateUser(UpdateUserRequest updateUserRequest) {
-        Optional<User> userOptional = userRepository.findById(updateUserRequest.getUserId());
-        if(userOptional.isPresent()){
-            User user = userOptional.get();
-            user.setName(updateUserRequest.getName());
-            user.setLastName(updateUserRequest.getLastName());
-            user.setPhone(updateUserRequest.getPhone());
-            return userRepository.save(user);
-        } else {
-            throw new UserDoesntExistException();
-        }
+public LoggedUserResponse updateUser(UpdateUserRequest updateUserRequest) {
+    Optional<User> userOptional = userRepository.findById(updateUserRequest.getUserId());
+    if (userOptional.isPresent()) {
+        User user = userOptional.get();
+        user.setName(updateUserRequest.getName());
+        user.setLastName(updateUserRequest.getLastName());
+        user.setPhone(updateUserRequest.getPhone());
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user.getEmail());
+        return mapToLoggedUserResponse(user, token);
+    } else {
+        throw new UserDoesntExistException();
     }
+}
+
+private LoggedUserResponse mapToLoggedUserResponse(User user, String token) {
+    return new LoggedUserResponse(
+            user.getUserId(),
+            user.getName(),
+            user.getLastName(),
+            user.getEmail(),
+            user.getPhone(),
+            user.getRole(),
+            token
+    );
+}
 
 }

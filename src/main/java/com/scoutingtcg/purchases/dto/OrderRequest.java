@@ -10,6 +10,7 @@ public class OrderRequest {
     private String fullName;
     private String address;
     private String apartment;
+    private String phone;
     private String city;
     private String state;
     private String zip;

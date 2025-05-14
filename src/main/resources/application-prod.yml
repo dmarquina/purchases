@@ -24,3 +24,6 @@ aws:
     pokemonBucketName: ${AWS_S3_POKEMON_BUCKET_NAME}
     receiptBucketName: ${AWS_S3_RECEIPT_BUCKET_NAME}
     endpoint: ${AWS_S3_ENDPOINT}
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000 # 1 day

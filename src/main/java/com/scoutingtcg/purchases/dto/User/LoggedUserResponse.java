@@ -1,16 +1,12 @@
 package com.scoutingtcg.purchases.dto.User;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class LoggedUserResponse {
-    private Long userId;
-    private String name;
-    private String lastName;
-    private String email;
-    private String phone;
-    private String role;
-    private String token;
+public record LoggedUserResponse(
+        Long userId,
+        String name,
+        String lastName,
+        String email,
+        String phone,
+        String role,
+        String token
+) {
 }
