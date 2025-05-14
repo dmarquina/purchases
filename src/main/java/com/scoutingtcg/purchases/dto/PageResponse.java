@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.dto.CardForSale;
+package com.scoutingtcg.purchases.dto;
 
 import java.util.List;
 

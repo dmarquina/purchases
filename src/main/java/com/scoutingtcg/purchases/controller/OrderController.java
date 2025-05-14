@@ -1,10 +1,16 @@
 package com.scoutingtcg.purchases.controller;
 
-import com.scoutingtcg.purchases.dto.OrderRequest;
 import com.scoutingtcg.purchases.dto.CartItemDto;
-import com.scoutingtcg.purchases.model.Order;
-import com.scoutingtcg.purchases.model.Product;
+import com.scoutingtcg.purchases.dto.OrderDetailResponse;
+import com.scoutingtcg.purchases.dto.OrderRequest;
+import com.scoutingtcg.purchases.dto.PageResponse;
+import com.scoutingtcg.purchases.model.OrderResponse;
+import com.scoutingtcg.purchases.model.OrderStatus;
+import com.scoutingtcg.purchases.model.OrderSummaryResponse;
 import com.scoutingtcg.purchases.service.OrderService;
+import com.scoutingtcg.purchases.util.PageUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +32,8 @@ public class OrderController {
         return ResponseEntity.ok(orderService.checkStockAvailability(cartItems));
     }
 
-    //TODO: dto para order
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest orderRequest) {
         return ResponseEntity.ok(orderService.createOrder(orderRequest));
     }
 
@@ -37,4 +42,30 @@ public class OrderController {
                               @RequestPart("file") MultipartFile file) {
         orderService.uploadPayment(orderId, file);
     }
+
+    @GetMapping("/summary")
+    public PageResponse<OrderSummaryResponse> getAllOrderSummaries(@RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return PageUtils.toPageResponse(orderService.getAllOrderSummaries(pageable));
+    }
+
+    @PatchMapping("/{orderId}/status")
+    public void updateStatus(@PathVariable Long orderId, @RequestBody OrderStatus status) {
+        orderService.updateOrderStatus(orderId, status);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderDetail(orderId));
+    }
+
+    @GetMapping("/users/{userId}")
+    public PageResponse<OrderSummaryResponse> getUserOrderDetail(@PathVariable Long userId,
+                                                                 @RequestParam(defaultValue = "0") int page,
+                                                                 @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return PageUtils.toPageResponse(orderService.getAllUserOrderSummaries(pageable, userId));
+    }
+
 }

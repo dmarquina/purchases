@@ -14,6 +14,17 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: onepokecardtcg@gmail.com
+    password: ${GMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 aws:
   s3:
@@ -24,4 +35,8 @@ aws:
       products: ${AWS_S3_PRODUCTS_BUCKET_NAME}
       pokemon: ${AWS_S3_POKEMON_BUCKET_NAME}
       receipts: ${AWS_S3_RECEIPT_BUCKET_NAME}
-    endpoint: ${AWS_S3_ENDPOINT}
+    endpoints:
+      products: ${AWS_S3_PRODUCTS_ENDPOINT}
+      pokemon: ${AWS_S3_POKEMON_ENDPOINT}
+      receipts: ${AWS_S3_RECEIPTS_ENDPOINT}
+

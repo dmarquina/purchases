@@ -41,8 +41,17 @@ public class S3ClientService {
     @Value("${aws.s3.buckets.products}")
     private String productsBucket;
 
-    @Value("${aws.s3.endpoint}")
-    private String endpoint;
+    @Getter
+    @Value("${aws.s3.endpoints.receipts}")
+    private String receiptsEndpoint;
+
+    @Getter
+    @Value("${aws.s3.endpoints.pokemon}")
+    private String pokemonEndpoint;
+
+    @Getter
+    @Value("${aws.s3.endpoints.products}")
+    private String productsEndpoint;
 
     private S3Client s3Client;
 
@@ -67,7 +76,7 @@ public class S3ClientService {
 
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, inputStream.available()));
 
-            return endpoint + fileName;
+            return resolveEndpoint(bucketName) + fileName;
 
         } catch (IOException | S3Exception e) {
             throw new RuntimeException("Error al subir archivo a S3: " + e.getMessage(), e);
@@ -91,6 +100,18 @@ public class S3ClientService {
 
     private String extractKeyFromUrl(String url) {
         return url.substring(url.indexOf(".com/") + 5);
+    }
+
+    private String resolveEndpoint(String bucketName) {
+        if (bucketName.equals(receiptsBucket)) {
+            return receiptsEndpoint;
+        } else if (bucketName.equals(pokemonBucket)) {
+            return pokemonEndpoint;
+        } else if (bucketName.equals(productsBucket)) {
+            return productsEndpoint;
+        } else {
+            throw new IllegalArgumentException("Bucket name not recognized: " + bucketName);
+        }
     }
 
 }

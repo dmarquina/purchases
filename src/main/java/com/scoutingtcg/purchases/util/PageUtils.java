@@ -1,7 +1,7 @@
 package com.scoutingtcg.purchases.util;
 
 
-import com.scoutingtcg.purchases.dto.CardForSale.PageResponse;
+import com.scoutingtcg.purchases.dto.PageResponse;
 import org.springframework.data.domain.Page;
 
 public class PageUtils {

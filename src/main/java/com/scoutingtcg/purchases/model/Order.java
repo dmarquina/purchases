@@ -22,6 +22,7 @@ public class Order {
     private String zip;
     private Double total;
     private String receiptUrl;
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime createdAt;
 

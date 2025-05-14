@@ -7,7 +7,6 @@ import com.scoutingtcg.purchases.service.CardForSaleService;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,6 +49,7 @@ public class CardForSaleController {
         }
     }
 
+    //TODO: Reutilizar el PageResponse generico que ya tenemos
     @PostMapping("/pokemon")
     public PokemonSinglesPageResponse getPokemonSingles(
             @RequestParam(defaultValue = "0") int page,

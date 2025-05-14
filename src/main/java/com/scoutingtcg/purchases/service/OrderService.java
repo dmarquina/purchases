@@ -1,18 +1,26 @@
 package com.scoutingtcg.purchases.service;
 
-import com.scoutingtcg.purchases.dto.OrderRequest;
 import com.scoutingtcg.purchases.dto.CartItemDto;
+import com.scoutingtcg.purchases.dto.OrderDetailResponse;
+import com.scoutingtcg.purchases.dto.OrderRequest;
 import com.scoutingtcg.purchases.exceptionhandler.InsufficientStockException;
 import com.scoutingtcg.purchases.model.*;
 import com.scoutingtcg.purchases.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.scoutingtcg.purchases.util.MailBodyBuilder.buildOrderConfirmationBody;
 
 @Service
 public class OrderService {
@@ -22,19 +30,22 @@ public class OrderService {
     private final CardForSaleRepository cardForSaleRepository;
     private final ProductRepository productRepository;
     private final S3ClientService s3ClientService;
+    private final EmailService emailService;
 
     public OrderService(OrderRepository orderRepository,
                         UserRepository userRepository,
                         OrderItemRepository orderItemRepository,
                         CardForSaleRepository cardForSaleRepository,
                         ProductRepository productRepository,
-                        S3ClientService s3ClientService) {
+                        S3ClientService s3ClientService,
+                        EmailService emailService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderItemRepository = orderItemRepository;
         this.cardForSaleRepository = cardForSaleRepository;
         this.productRepository = productRepository;
         this.s3ClientService = s3ClientService;
+        this.emailService = emailService;
     }
 
     public List<CartItemDto> checkStockAvailability(List<CartItemDto> cartItems) {
@@ -67,7 +78,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(OrderRequest request) {
+    public OrderResponse createOrder(OrderRequest request) {
         List<OrderItem> items = request.getCartItems().stream()
                 .map(this::mapToOrderItem)
                 .collect(Collectors.toList());
@@ -89,7 +100,18 @@ public class OrderService {
         items.forEach(item -> item.setOrder(savedOrder));
         orderItemRepository.saveAll(items);
 
-        return savedOrder;
+        return new OrderResponse(
+                savedOrder.getId(),
+                savedOrder.getFullName(),
+                savedOrder.getEmail(),
+                savedOrder.getAddress(),
+                savedOrder.getCity(),
+                savedOrder.getState(),
+                savedOrder.getTotal(),
+                savedOrder.getReceiptUrl(),
+                savedOrder.getStatus(),
+                savedOrder.getCreatedAt()
+        );
     }
 
     public void uploadPayment(Long orderId, MultipartFile file) {
@@ -106,7 +128,67 @@ public class OrderService {
 
         order.setReceiptUrl(imageUrl);
         order.setStatus(OrderStatus.PROCESSING_PAYMENT);
+        List<OrderItemDto> items = orderItemRepository.findOrderDetailDtoByOrderId(orderId);
+
+        String body = buildOrderConfirmationBody(order, items);
+        emailService.sendSimpleMail(order.getEmail(), "Thanks for your order!", body);
+
         orderRepository.save(order);
+    }
+
+    public Page<OrderSummaryResponse> getAllOrderSummaries(Pageable pageable) {
+        return orderRepository.findAllOrderSummaries(pageable);
+    }
+
+    public Page<OrderSummaryResponse> getAllUserOrderSummaries(Pageable pageable, Long userId) {
+        return orderRepository.findAllUserOrderSummaries(pageable, userId);
+    }
+
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        OrderStatus currentStatus = order.getStatus();
+
+        if (!isValidTransition(currentStatus, newStatus)) {
+            throw new IllegalStateException("Invalid status transition from " + currentStatus + " to " + newStatus);
+        }
+
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderDetail(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        List<OrderItemDto> items = orderItemRepository.findOrderDetailDtoByOrderId(orderId);
+
+        return new OrderDetailResponse(
+                order.getId(),
+                order.getFullName(),
+                order.getEmail(),
+                order.getAddress(),
+                order.getApartment(),
+                order.getCity(),
+                order.getState(),
+                order.getZip(),
+                order.getTotal(),
+                order.getReceiptUrl(),
+                order.getStatus(),
+                order.getCreatedAt(),
+                items
+        );
+    }
+
+    private boolean isValidTransition(OrderStatus current, OrderStatus next) {
+        return switch (current) {
+            case PROCESSING_PAYMENT -> next == OrderStatus.PAID || next == OrderStatus.CANCELED;
+            case PAID -> next == OrderStatus.SHIPPED || next == OrderStatus.REFUNDED;
+            case SHIPPED -> next == OrderStatus.COMPLETED;
+            default -> false;
+        };
     }
 
     private void handleUserForOrder(OrderRequest request, Order order) {
