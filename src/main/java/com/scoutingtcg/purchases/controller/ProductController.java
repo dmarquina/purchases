@@ -1,5 +1,6 @@
 package com.scoutingtcg.purchases.controller;
 
+import com.scoutingtcg.purchases.dto.Product.ProductRequest;
 import com.scoutingtcg.purchases.dto.Product.StoreProductResponse;
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.service.ProductService;
@@ -33,15 +34,15 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Product createProduct(@RequestPart("product") Product product,
+    public Product createProduct(@RequestPart("product") ProductRequest productRequest,
                                  @RequestPart("file") MultipartFile file) {
-        return productService.createProduct(product, file);
+        return productService.createProduct(productRequest, file);
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Product updateProduct(@RequestPart("product") Product product,
+    public Product updateProduct(@RequestPart("product") ProductRequest productRequest,
                                  @RequestPart(value = "file", required = false) MultipartFile file) {
-        return productService.updateProduct(product, file);
+        return productService.updateProduct(productRequest, file);
     }
 
     @DeleteMapping("/{id}")

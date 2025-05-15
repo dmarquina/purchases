@@ -1,7 +1,9 @@
 package com.scoutingtcg.purchases.service;
 
+import com.scoutingtcg.purchases.dto.Product.ProductRequest;
 import com.scoutingtcg.purchases.model.Product;
-import com.scoutingtcg.purchases.model.ProductImage;
+import com.scoutingtcg.purchases.model.ShippingSize;
+import com.scoutingtcg.purchases.model.Status;
 import com.scoutingtcg.purchases.repository.ProductImageRepository;
 import com.scoutingtcg.purchases.repository.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -38,32 +40,39 @@ public class ProductService {
     }
 
     public Page<Product> getSealedProducts(String franchise, Pageable pageable) {
-        return productRepository.findByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", pageable,0);
+        return productRepository.findByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", pageable, 0);
     }
 
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
 
-    public Product createProduct(Product product, MultipartFile file) {
-        return saveProductAndHandleImageUpload(product, file);
+    public Product createProduct(ProductRequest productRequest, MultipartFile file) {
+        Product product = new Product();
+        mapProductRequestToProduct(product, productRequest);
+
+        product.setStock(0);
+        product.setStatus(Status.ACTIVE);
+
+        String imageUrl = uploadImage(file);
+        product.setCoverImageUrl(imageUrl);
+
+        return productRepository.save(product);
     }
 
-    public Product updateProduct(Product product, MultipartFile file) {
-        Product product1WithOldImage = productRepository.findById(product.getProductId())
+    public Product updateProduct(ProductRequest productRequest, MultipartFile file) {
+        Product product = productRepository.findById(productRequest.productId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-
         if (file != null && !file.isEmpty()) {
-            if (product1WithOldImage.getCoverImageUrl() != null && !product1WithOldImage.getCoverImageUrl().isEmpty()) {
-                s3ClientService.deleteFile(productBucketName, product1WithOldImage.getCoverImageUrl());
+            if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
+                s3ClientService.deleteFile(productBucketName, product.getCoverImageUrl());
             }
-            return saveProductAndHandleImageUpload(product, file);
-        } else {
-            product.setCoverImageUrl(product1WithOldImage.getCoverImageUrl());
-            return productRepository.save(product);
+            String imageUrl = uploadImage(file);
+            product.setCoverImageUrl(imageUrl);
         }
-
+        mapProductRequestToProduct(product, productRequest);
+        return productRepository.save(product);
     }
 
     @Transactional
@@ -78,22 +87,21 @@ public class ProductService {
                 });
     }
 
-    public Product saveProductAndHandleImageUpload(Product product, MultipartFile file) {
+    public String uploadImage(MultipartFile file) {
         try {
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-            String imageUrl = s3ClientService.uploadFile(productBucketName, fileName, file.getInputStream(), file.getContentType());
-            product.setCoverImageUrl(imageUrl);
-            product.setStock(0);
-            Product savedProduct = productRepository.save(product);
-
-            ProductImage productImage = new ProductImage();
-            productImage.setProduct(savedProduct);
-            productImage.setImageUrl(imageUrl);
-            productImageRepository.save(productImage);
-            return savedProduct;
+            return s3ClientService.uploadFile(productBucketName, fileName, file.getInputStream(), file.getContentType());
         } catch (IOException e) {
             throw new RuntimeException("Error uploading file", e);
         }
+    }
+
+    private void mapProductRequestToProduct(Product product, ProductRequest productRequest) {
+        product.setProductName(productRequest.productName());
+        product.setCurrentPrice(productRequest.currentPrice());
+        product.setFranchise(productRequest.franchise());
+        product.setPresentation(productRequest.presentation());
+        product.setShippingSize(ShippingSize.valueOf(productRequest.shippingSize().toUpperCase()));
     }
 
 }

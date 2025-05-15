@@ -29,6 +29,13 @@ public class CardForSaleService {
         this.pokemonCardPriceService = pokemonCardPriceService;
     }
 
+    /**
+     * Processes a CSV file containing card information and updates the database accordingly.
+     *
+     * @param is InputStream of the CSV file.
+     * @return A list of rows that failed to process.
+     * @throws IOException If an error occurs while reading the CSV file.
+     */
     public List<CSVRecord> processCsv(InputStream is) throws IOException {
         List<CSVRecord> failedRows = new ArrayList<>();
 
@@ -49,6 +56,92 @@ public class CardForSaleService {
         }
 
         return failedRows;
+    }
+
+
+    /**
+     * Generates a CSV file containing the rows that failed to process.
+     *
+     * @param failedRows List of CSVRecord objects representing the failed rows.
+     * @return A byte array representing the CSV file.
+     * @throws IOException If an error occurs while writing the CSV file.
+     */
+    public byte[] generateErrorCsv(List<CSVRecord> failedRows) throws IOException {
+        String[] headers = {"Name", "Set Code", "Card Number", "Condition", "Printing", "Quantity"};
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
+             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(headers))
+        ) {
+            for (CSVRecord row : failedRows) {
+                printer.printRecord(
+                        row.get("Name"),
+                        row.get("Set Code"),
+                        row.get("Card Number"),
+                        row.get("Condition"),
+                        row.get("Printing"),
+                        row.get("Quantity")
+                );
+            }
+            printer.flush();
+            return out.toByteArray();
+        }
+    }
+
+    /**
+     * Retrieves a paginated list of Pokemon cards for sale based on the provided filters.
+     *
+     * @param filters  The filters to apply to the search.
+     * @param pageable The pagination information.
+     * @return A response object containing the filtered Pokemon cards.
+     */
+    public PokemonSinglesPageResponse getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
+        Page<String> pagedCardIds = cardForSaleRepository.findFilteredCardIdsWithPagination(
+                filters.sets().isEmpty() ? null : filters.sets(),
+                filters.conditions().isEmpty() ? null : filters.conditions(),
+                filters.printings().isEmpty() ? null : filters.printings(),
+                filters.name() == null || filters.name().isBlank() ? null : filters.name(),
+                pageable
+        );
+
+        List<String> cardIds = pagedCardIds.getContent();
+        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findByCardIdIn(cardIds);
+        List<PokemonSingleResponse> responses = getPokemonSingleResponses(data);
+
+        return new PokemonSinglesPageResponse(
+                responses,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pagedCardIds.getTotalElements(),
+                pagedCardIds.getTotalPages(),
+                pagedCardIds.isLast()
+        );
+    }
+
+    /**
+     * Retrieves filter options for Pokemon cards.
+     *
+     * @return A response object containing filter options.
+     */
+    public PokemonFilterOptionsResponse getFilterOptions() {
+        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findAllCardForSaleWithPokemonCard();
+
+        Set<SetOption> sets = new HashSet<>();
+        Set<String> conditions = new HashSet<>();
+        Set<String> printings = new HashSet<>();
+
+        for (CardForSaleWithPokemonCardDto dto : data) {
+            PokemonCard card = dto.getPokemonCard();
+            sets.add(new SetOption(card.getSetId(), card.getSetName()));
+            conditions.add(dto.getCardForSale().getCardCondition());
+            printings.add(dto.getCardForSale().getPrinting());
+        }
+
+        return new PokemonFilterOptionsResponse(
+                new ArrayList<>(sets),
+                new ArrayList<>(conditions),
+                new ArrayList<>(printings)
+        );
     }
 
     private CardForSale rowToCardForSale(CSVRecord row) {
@@ -89,52 +182,6 @@ public class CardForSaleService {
         }
     }
 
-    public byte[] generateErrorCsv(List<CSVRecord> failedRows) throws IOException {
-        String[] headers = {"Name", "Set Code", "Card Number", "Condition", "Printing", "Quantity"};
-
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
-             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(headers))
-        ) {
-            for (CSVRecord row : failedRows) {
-                printer.printRecord(
-                        row.get("Name"),
-                        row.get("Set Code"),
-                        row.get("Card Number"),
-                        row.get("Condition"),
-                        row.get("Printing"),
-                        row.get("Quantity")
-                );
-            }
-            printer.flush();
-            return out.toByteArray();
-        }
-    }
-
-    public PokemonSinglesPageResponse getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
-        Page<String> pagedCardIds = cardForSaleRepository.findFilteredCardIdsWithPagination(
-                filters.sets().isEmpty() ? null : filters.sets(),
-                filters.conditions().isEmpty() ? null : filters.conditions(),
-                filters.printings().isEmpty() ? null : filters.printings(),
-                filters.name() == null || filters.name().isBlank() ? null : filters.name(),
-                pageable
-        );
-
-        List<String> cardIds = pagedCardIds.getContent();
-        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findByCardIdIn(cardIds);
-        List<PokemonSingleResponse> responses = getPokemonSingleResponses(data);
-
-        return new PokemonSinglesPageResponse(
-                responses,
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pagedCardIds.getTotalElements(),
-                pagedCardIds.getTotalPages(),
-                pagedCardIds.isLast()
-        );
-    }
-
-
     private static List<PokemonSingleResponse> getPokemonSingleResponses(List<CardForSaleWithPokemonCardDto> data) {
         Map<String, List<CardForSaleWithPokemonCardDto>> grouped = data.stream()
                 .collect(Collectors.groupingBy(dto -> dto.getCardForSale().getCardId()));
@@ -169,27 +216,6 @@ public class CardForSaleService {
                             .build();
                 })
                 .toList();
-    }
-
-    public PokemonFilterOptionsResponse getFilterOptions() {
-        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findAllCardForSaleWithPokemonCard();
-
-        Set<SetOption> sets = new HashSet<>();
-        Set<String> conditions = new HashSet<>();
-        Set<String> printings = new HashSet<>();
-
-        for (CardForSaleWithPokemonCardDto dto : data) {
-            PokemonCard card = dto.getPokemonCard();
-            sets.add(new SetOption(card.getSetId(), card.getSetName()));
-            conditions.add(dto.getCardForSale().getCardCondition());
-            printings.add(dto.getCardForSale().getPrinting());
-        }
-
-        return new PokemonFilterOptionsResponse(
-                new ArrayList<>(sets),
-                new ArrayList<>(conditions),
-                new ArrayList<>(printings)
-        );
     }
 
 

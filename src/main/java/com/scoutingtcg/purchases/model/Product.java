@@ -24,6 +24,8 @@ public class Product {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @Enumerated(EnumType.STRING)
+    private ShippingSize shippingSize; //SINGLE_PLAIN | SINGLE_BUBBLE | PRODUCT_SMALL | PRODUCT_MEDIUM | PRODUCT_LARGE
+    @Enumerated(EnumType.STRING)
     private Status status; // ACTIVE, INACTIVE, PENDING
 
     @PrePersist
