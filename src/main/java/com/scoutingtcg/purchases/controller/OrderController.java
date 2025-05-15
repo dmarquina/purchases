@@ -38,7 +38,7 @@ public class OrderController {
     }
 
     @PostMapping(value = "/upload-payment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public void uploadPayment(@RequestParam("orderId") Long orderId,
+    public void uploadPayment(@RequestParam("orderId") String orderId,
                               @RequestPart("file") MultipartFile file) {
         orderService.uploadPayment(orderId, file);
     }
@@ -51,12 +51,12 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/status")
-    public void updateStatus(@PathVariable Long orderId, @RequestBody OrderStatus status) {
+    public void updateStatus(@PathVariable String orderId, @RequestBody OrderStatus status) {
         orderService.updateOrderStatus(orderId, status);
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long orderId) {
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable String orderId) {
         return ResponseEntity.ok(orderService.getOrderDetail(orderId));
     }
 

@@ -1,6 +1,8 @@
 package com.scoutingtcg.purchases.dto;
 
+import com.scoutingtcg.purchases.model.ShippingSize;
 import lombok.Data;
+
 import java.util.List;
 
 @Data
@@ -14,6 +16,9 @@ public class OrderRequest {
     private String city;
     private String state;
     private String zip;
+    private double shippingCost;
+    private boolean freeShippingApplied;
+    private ShippingSize shippingSize;
     private Double total;
     private List<CartItemDto> cartItems;
 }

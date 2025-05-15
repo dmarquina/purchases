@@ -41,4 +41,3 @@ aws:
       receipts: ${AWS_S3_RECEIPTS_ENDPOINT}
 jwt:
   secret: ${JWT_SECRET}
-  expiration: 86400000 # 1 day

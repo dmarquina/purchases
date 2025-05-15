@@ -23,5 +23,5 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 FROM OrderItem oi
                 WHERE oi.order.id = :orderId
             """)
-    List<OrderItemDto> findOrderDetailDtoByOrderId(Long orderId);
+    List<OrderItemDto> findOrderDetailDtoByOrderId(String orderId);
 }

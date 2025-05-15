@@ -4,7 +4,7 @@ package com.scoutingtcg.purchases.model;
 import java.time.LocalDateTime;
 
 public record OrderResponse(
-        Long id,
+        String id,
         String fullName,
         String email,
         String address,

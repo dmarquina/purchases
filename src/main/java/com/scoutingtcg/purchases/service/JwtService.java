@@ -19,14 +19,10 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration; // 1 día
-
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -37,7 +33,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, String email) {
         final String extractedEmail = extractUsername(token);
-        return extractedEmail.equals(email) && !isTokenExpired(token);
+        return extractedEmail.equals(email);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -53,13 +49,7 @@ public class JwtService {
                 .getBody();
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
 
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
 
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);

@@ -85,12 +85,16 @@ public class OrderService {
 
         Order order = new Order();
         order.setEmail(request.getEmail());
+        order.setPhone(request.getPhone());
         order.setFullName(request.getFullName());
         order.setAddress(request.getAddress());
         order.setApartment(request.getApartment());
         order.setCity(request.getCity());
         order.setState(request.getState());
         order.setZip(request.getZip());
+        order.setShippingCost(request.getShippingCost());
+        order.setFreeShippingApplied(request.isFreeShippingApplied());
+        order.setShippingSize(request.getShippingSize());
         order.setTotal(request.getTotal());
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.WAITING_PAYMENT);
@@ -114,7 +118,7 @@ public class OrderService {
         );
     }
 
-    public void uploadPayment(Long orderId, MultipartFile file) {
+    public void uploadPayment(String orderId, MultipartFile file) {
         String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
         String imageUrl;
         try {
@@ -144,7 +148,7 @@ public class OrderService {
         return orderRepository.findAllUserOrderSummaries(pageable, userId);
     }
 
-    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
+    public void updateOrderStatus(String orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -159,7 +163,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDetailResponse getOrderDetail(Long orderId) {
+    public OrderDetailResponse getOrderDetail(String orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 

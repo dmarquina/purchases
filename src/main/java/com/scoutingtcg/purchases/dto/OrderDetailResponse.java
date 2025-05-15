@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record OrderDetailResponse(
-        Long id,
+        String id,
         String fullName,
         String email,
         String address,

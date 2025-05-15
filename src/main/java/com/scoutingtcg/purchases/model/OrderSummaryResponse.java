@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OrderSummaryResponse {
 
-    private Long id;
+    private String id;
     private String fullName;
     private Double total;
     private String receiptUrl;
