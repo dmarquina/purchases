@@ -7,6 +7,7 @@ import com.scoutingtcg.purchases.dto.PageResponse;
 import com.scoutingtcg.purchases.model.OrderResponse;
 import com.scoutingtcg.purchases.model.OrderStatus;
 import com.scoutingtcg.purchases.model.OrderSummaryResponse;
+import com.scoutingtcg.purchases.service.OrderPdfService;
 import com.scoutingtcg.purchases.service.OrderService;
 import com.scoutingtcg.purchases.util.PageUtils;
 import org.springframework.data.domain.PageRequest;
@@ -22,9 +23,11 @@ import java.util.List;
 @RequestMapping("/orders")
 public class OrderController {
     private final OrderService orderService;
+    private final OrderPdfService orderPdfService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, OrderPdfService orderPdfService) {
         this.orderService = orderService;
+        this.orderPdfService = orderPdfService;
     }
 
     @PostMapping("/check-stock")
@@ -58,6 +61,14 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable String orderId) {
         return ResponseEntity.ok(orderService.getOrderDetail(orderId));
+    }
+
+    @GetMapping(value = "/{orderId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> getOrderPdf(@PathVariable String orderId) throws Exception {
+        byte[] pdfContent = orderPdfService.generateOrderPdf(orderService.getOrderDetail(orderId));
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=order_" + orderId + ".pdf")
+                .body(pdfContent);
     }
 
     @GetMapping("/users/{userId}")
