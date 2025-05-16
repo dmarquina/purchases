@@ -1,7 +1,7 @@
 package com.scoutingtcg.purchases.repository;
 
-import com.scoutingtcg.purchases.model.OrderItem;
-import com.scoutingtcg.purchases.model.OrderItemDto;
+import com.scoutingtcg.purchases.model.order.OrderItem;
+import com.scoutingtcg.purchases.dto.OrderItemDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

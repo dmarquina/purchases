@@ -2,6 +2,7 @@ package com.scoutingtcg.purchases.service;
 
 import com.scoutingtcg.purchases.dto.CardForSale.*;
 import com.scoutingtcg.purchases.model.*;
+import com.scoutingtcg.purchases.model.pokemon.PokemonCard;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.PokemonCardRepository;
 import org.apache.commons.csv.CSVFormat;

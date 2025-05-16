@@ -1,8 +1,6 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.model.pokemon;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

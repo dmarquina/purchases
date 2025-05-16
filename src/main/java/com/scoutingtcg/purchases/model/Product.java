@@ -19,7 +19,8 @@ public class Product {
     private Double currentPrice;
     private Integer stock;
     private String coverImageUrl;
-    private String franchise;
+    @Enumerated(EnumType.STRING)
+    private Franchise franchise; // POKEMON, ONE_PIECE...
     private String presentation;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

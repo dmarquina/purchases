@@ -1,7 +1,6 @@
 package com.scoutingtcg.purchases.dto;
 
-import com.scoutingtcg.purchases.model.OrderItemDto;
-import com.scoutingtcg.purchases.model.OrderStatus;
+import com.scoutingtcg.purchases.model.order.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.model.pokemon;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

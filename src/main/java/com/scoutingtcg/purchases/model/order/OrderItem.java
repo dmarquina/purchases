@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.model.order;
 
 import jakarta.persistence.*;
 import lombok.Data;

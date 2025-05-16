@@ -4,7 +4,6 @@ import com.scoutingtcg.purchases.dto.Product.ProductRequest;
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.model.ShippingSize;
 import com.scoutingtcg.purchases.model.Status;
-import com.scoutingtcg.purchases.repository.ProductImageRepository;
 import com.scoutingtcg.purchases.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,16 +21,13 @@ public class ProductService {
 
     private final S3ClientService s3ClientService;
     private final ProductRepository productRepository;
-    private final ProductImageRepository productImageRepository;
 
     private final String productBucketName;
 
     public ProductService(ProductRepository productRepository,
-                          S3ClientService s3ClientService,
-                          ProductImageRepository productImageRepository) {
+                          S3ClientService s3ClientService) {
         this.productRepository = productRepository;
         this.s3ClientService = s3ClientService;
-        this.productImageRepository = productImageRepository;
         this.productBucketName = s3ClientService.getProductsBucket();
     }
 
@@ -82,7 +78,6 @@ public class ProductService {
                     if (product.getCoverImageUrl() != null && !product.getCoverImageUrl().isEmpty()) {
                         s3ClientService.deleteFile(productBucketName, product.getCoverImageUrl());
                     }
-                    productImageRepository.deleteAllByProduct(product);
                     productRepository.deleteById(id);
                 });
     }

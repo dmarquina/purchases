@@ -1,7 +1,7 @@
 package com.scoutingtcg.purchases.dto.CardForSale;
 
 import com.scoutingtcg.purchases.model.CardForSale;
-import com.scoutingtcg.purchases.model.PokemonCard;
+import com.scoutingtcg.purchases.model.pokemon.PokemonCard;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

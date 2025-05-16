@@ -1,8 +1,7 @@
 package com.scoutingtcg.purchases.repository;
 
-import com.scoutingtcg.purchases.dto.OrderDetailResponse;
-import com.scoutingtcg.purchases.model.Order;
-import com.scoutingtcg.purchases.model.OrderSummaryResponse;
+import com.scoutingtcg.purchases.model.order.Order;
+import com.scoutingtcg.purchases.dto.OrderSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

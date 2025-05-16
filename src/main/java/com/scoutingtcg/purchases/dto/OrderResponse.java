@@ -1,5 +1,7 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.dto;
 
+
+import com.scoutingtcg.purchases.model.order.OrderStatus;
 
 import java.time.LocalDateTime;
 

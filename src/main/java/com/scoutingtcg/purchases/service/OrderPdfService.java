@@ -5,7 +5,7 @@ import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.scoutingtcg.purchases.dto.OrderDetailResponse;
-import com.scoutingtcg.purchases.model.OrderItemDto;
+import com.scoutingtcg.purchases.dto.OrderItemDto;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;

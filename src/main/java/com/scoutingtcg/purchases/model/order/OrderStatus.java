@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.model.order;
 
 public enum OrderStatus {
     WAITING_PAYMENT,

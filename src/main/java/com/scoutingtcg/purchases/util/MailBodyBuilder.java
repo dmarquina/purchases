@@ -1,8 +1,7 @@
 package com.scoutingtcg.purchases.util;
 
-import com.scoutingtcg.purchases.model.Order;
-import com.scoutingtcg.purchases.model.OrderItem;
-import com.scoutingtcg.purchases.model.OrderItemDto;
+import com.scoutingtcg.purchases.model.order.Order;
+import com.scoutingtcg.purchases.dto.OrderItemDto;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;

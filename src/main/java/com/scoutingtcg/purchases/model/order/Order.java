@@ -1,10 +1,11 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.model.order;
 
+import com.scoutingtcg.purchases.model.ShippingSize;
+import com.scoutingtcg.purchases.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Data

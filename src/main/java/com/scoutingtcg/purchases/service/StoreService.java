@@ -6,7 +6,7 @@ import com.scoutingtcg.purchases.dto.CardForSale.PokemonSingleVariantResponse;
 import com.scoutingtcg.purchases.dto.Product.StoreProductResponse;
 import com.scoutingtcg.purchases.model.CardForSale;
 import com.scoutingtcg.purchases.model.Franchise;
-import com.scoutingtcg.purchases.model.PokemonCard;
+import com.scoutingtcg.purchases.model.pokemon.PokemonCard;
 import com.scoutingtcg.purchases.model.Product;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.ProductRepository;

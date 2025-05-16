@@ -4,7 +4,7 @@ import com.scoutingtcg.purchases.dto.CardForSale.CardForSaleWithPokemonCardDto;
 import com.scoutingtcg.purchases.dto.CardForSale.PokemonCardApiResponse;
 import com.scoutingtcg.purchases.dto.CardForSale.PokemonCardMarketPriceDto;
 import com.scoutingtcg.purchases.model.CardForSale;
-import com.scoutingtcg.purchases.model.PokemonCardMarketPrice;
+import com.scoutingtcg.purchases.model.pokemon.PokemonCardMarketPrice;
 import com.scoutingtcg.purchases.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.repository.PokemonCardMarketPriceRepository;
 import org.slf4j.Logger;

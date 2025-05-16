@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.model;
+package com.scoutingtcg.purchases.dto;
 
 public record OrderItemDto(
 
