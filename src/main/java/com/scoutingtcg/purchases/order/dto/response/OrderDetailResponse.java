@@ -1,20 +1,17 @@
-package com.scoutingtcg.purchases.order.dto;
+package com.scoutingtcg.purchases.order.dto.response;
 
+import com.scoutingtcg.purchases.order.dto.OrderItemDto;
 import com.scoutingtcg.purchases.order.model.OrderStatus;
+import com.scoutingtcg.purchases.shared.dto.AddressDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record OrderDetailResponse(
         String id,
-        String fullName,
         String email,
-        String address,
-        String apartment,
-        String city,
-        String state,
-        String zip,
         String phone,
+        AddressDto shippingAddress,
         String shippingSize,
         Double shippingCost,
         boolean freeShippingApplied,

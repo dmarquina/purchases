@@ -4,8 +4,8 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import com.scoutingtcg.purchases.order.dto.OrderDetailResponse;
 import com.scoutingtcg.purchases.order.dto.OrderItemDto;
+import com.scoutingtcg.purchases.order.dto.response.OrderDetailResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -26,15 +26,18 @@ public class OrderPdfService {
             Font labelFont = new Font(Font.HELVETICA, 10, Font.BOLD);
             Font bodyFont = new Font(Font.HELVETICA, 10);
 
-            // Shipping address
+            // Shipping shippingAddress
             doc.add(new Paragraph("Ship To:", labelFont));
             PdfPTable shipToTable = new PdfPTable(2); // Crear una tabla con 2 columnas
             shipToTable.setWidthPercentage(100);
 
             PdfPCell cell = new PdfPCell();
             cell.setBorder(Rectangle.NO_BORDER);
-            cell.addElement(new Paragraph(orderDetailResponse.fullName(), headerFont));
-            cell.addElement(new Paragraph(orderDetailResponse.address() + (orderDetailResponse.apartment() != null && !orderDetailResponse.apartment().isEmpty() ? ", Apt " + orderDetailResponse.apartment() : ""), headerFont));
+            cell.addElement(new Paragraph(orderDetailResponse.shippingAddress().fullName(), headerFont));
+            cell.addElement(new Paragraph(orderDetailResponse.shippingAddress().addressLine()
+                    + (orderDetailResponse.shippingAddress().apartment() != null
+                    && !orderDetailResponse.shippingAddress().apartment().isEmpty() ? ", Apt "
+                    + orderDetailResponse.shippingAddress().apartment() : ""), headerFont));
             shipToTable.addCell(cell);
 
             PdfPCell emptyCell = new PdfPCell();
@@ -59,8 +62,11 @@ public class OrderPdfService {
             PdfPCell leftCell = new PdfPCell();
             leftCell.setBorder(Rectangle.BOX);
             leftCell.addElement(new Paragraph("Shipping Address: ", labelFont));
-            leftCell.addElement(new Paragraph(orderDetailResponse.fullName(), bodyFont));
-            leftCell.addElement(new Paragraph(orderDetailResponse.address() + (orderDetailResponse.apartment() != null && !orderDetailResponse.apartment().isEmpty() ? ", Apt " + orderDetailResponse.apartment() : ""), bodyFont));
+            leftCell.addElement(new Paragraph(orderDetailResponse.shippingAddress().fullName(), bodyFont));
+            leftCell.addElement(new Paragraph(orderDetailResponse.shippingAddress().addressLine()
+                    + (orderDetailResponse.shippingAddress().apartment() != null
+                    && !orderDetailResponse.shippingAddress().apartment().isEmpty() ? ", Apt "
+                    + orderDetailResponse.shippingAddress().apartment() : ""), bodyFont));
             leftCell.addElement(new Paragraph(" ", bodyFont));
 
             // Segunda columna
@@ -73,12 +79,12 @@ public class OrderPdfService {
 
             Phrase shippingMethodPhrase = new Phrase();
             shippingMethodPhrase.add(new Chunk("Shipping method: ", labelFont));
-            shippingMethodPhrase.add(new Chunk("Standard (10-15 days)", bodyFont));
+            shippingMethodPhrase.add(new Chunk("Standard (7-12 days)", bodyFont));
             rightCell.addElement(shippingMethodPhrase);
 
             Phrase buyerNamePhrase = new Phrase();
-            buyerNamePhrase.add(new Chunk("Buyer Name: ", labelFont));
-            buyerNamePhrase.add(new Chunk(orderDetailResponse.fullName(), bodyFont));
+            buyerNamePhrase.add(new Chunk("Contact Name: ", labelFont));
+            buyerNamePhrase.add(new Chunk(orderDetailResponse.shippingAddress().fullName(), bodyFont));
             rightCell.addElement(buyerNamePhrase);
 
             rightCell.addElement(new Paragraph(" ", bodyFont));

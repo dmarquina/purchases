@@ -21,7 +21,9 @@ public class UserAddress {
     private String state;
     private String zipCode;
     private String country;
-    private Boolean isDefault; // opcional: true si es la dirección principal
+
+    private boolean isDefault = false;
+    private boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

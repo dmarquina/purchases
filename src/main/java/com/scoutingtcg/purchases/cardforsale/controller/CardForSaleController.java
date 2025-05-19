@@ -1,9 +1,10 @@
 package com.scoutingtcg.purchases.cardforsale.controller;
 
 import com.scoutingtcg.purchases.cardforsale.service.CardForSaleService;
-import com.scoutingtcg.purchases.pokemoncard.dto.PokemonFilterOptionsResponse;
-import com.scoutingtcg.purchases.pokemoncard.dto.PokemonSinglesFilterRequest;
-import com.scoutingtcg.purchases.pokemoncard.dto.PokemonSinglesPageResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.response.PokemonFilterOptionsResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.response.PokemonSingleResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.request.PokemonSinglesFilterRequest;
+import com.scoutingtcg.purchases.shared.dto.PageResponse;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public class CardForSaleController {
         this.cardForSaleService = cardForSaleService;
     }
 
-    @PostMapping("/upload-cards")
+    @PostMapping("/pokemon/upload-cards")
     public ResponseEntity<?> uploadCards(@RequestParam("file") MultipartFile file) {
         try {
             List<CSVRecord> failedRows = cardForSaleService.processCsv(file.getInputStream());
@@ -49,9 +50,8 @@ public class CardForSaleController {
         }
     }
 
-    //TODO: Reutilizar el PageResponse generico que ya tenemos
     @PostMapping("/pokemon")
-    public PokemonSinglesPageResponse getPokemonSingles(
+    public PageResponse<PokemonSingleResponse> getPokemonSingles(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestBody PokemonSinglesFilterRequest filters

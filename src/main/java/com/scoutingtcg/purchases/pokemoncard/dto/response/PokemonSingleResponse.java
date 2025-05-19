@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.pokemoncard.dto;
+package com.scoutingtcg.purchases.pokemoncard.dto.response;
 
 import java.util.List;
 

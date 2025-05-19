@@ -17,12 +17,16 @@ public class Order {
 
     private String email;
     private String phone;
-    private String fullName;
-    private String address;
-    private String apartment;
-    private String city;
-    private String state;
-    private String zip;
+
+    // Address snapshot
+    private String shippingName;
+    private String shippingAddressLine;
+    private String shippingApartment;
+    private String shippingCity;
+    private String shippingState;
+    private String shippingZip;
+    private String shippingCountry;
+
     private Double total;
     private String receiptUrl;
     private double shippingCost;

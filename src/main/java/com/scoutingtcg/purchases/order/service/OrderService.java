@@ -1,18 +1,26 @@
 package com.scoutingtcg.purchases.order.service;
 
 import com.scoutingtcg.purchases.cardforsale.repository.CardForSaleRepository;
-import com.scoutingtcg.purchases.shared.exceptionhandler.InsufficientStockException;
-import com.scoutingtcg.purchases.shared.integration.EmailService;
-import com.scoutingtcg.purchases.shared.integration.S3ClientService;
-import com.scoutingtcg.purchases.shared.model.*;
-import com.scoutingtcg.purchases.order.dto.*;
-import com.scoutingtcg.purchases.order.model.*;
+import com.scoutingtcg.purchases.order.dto.CartItemDto;
+import com.scoutingtcg.purchases.order.dto.OrderItemDto;
+import com.scoutingtcg.purchases.order.dto.request.OrderRequest;
+import com.scoutingtcg.purchases.order.dto.response.OrderDetailResponse;
+import com.scoutingtcg.purchases.order.dto.response.OrderResponse;
+import com.scoutingtcg.purchases.order.dto.response.OrderSummaryResponse;
+import com.scoutingtcg.purchases.order.model.Order;
+import com.scoutingtcg.purchases.order.model.OrderItem;
+import com.scoutingtcg.purchases.order.model.OrderStatus;
 import com.scoutingtcg.purchases.order.repository.OrderItemRepository;
 import com.scoutingtcg.purchases.order.repository.OrderRepository;
 import com.scoutingtcg.purchases.product.repository.ProductRepository;
 import com.scoutingtcg.purchases.security.model.Role;
 import com.scoutingtcg.purchases.security.model.User;
 import com.scoutingtcg.purchases.security.repository.UserRepository;
+import com.scoutingtcg.purchases.shared.dto.AddressDto;
+import com.scoutingtcg.purchases.shared.exceptionhandler.InsufficientStockException;
+import com.scoutingtcg.purchases.shared.integration.EmailService;
+import com.scoutingtcg.purchases.shared.integration.S3ClientService;
+import com.scoutingtcg.purchases.shared.model.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +36,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.scoutingtcg.purchases.shared.util.MailBodyBuilder.buildOrderConfirmationBody;
+import static com.scoutingtcg.purchases.shared.util.MailBodyBuilder.buildOwnerNotificationBody;
 
 @Service
 public class OrderService {
@@ -93,19 +102,24 @@ public class OrderService {
         Order order = new Order();
         order.setEmail(request.email());
         order.setPhone(request.phone());
-        order.setFullName(request.fullName());
-        order.setAddress(request.address());
-        order.setApartment(request.apartment());
-        order.setCity(request.city());
-        order.setState(request.state());
-        order.setZip(request.zip());
+
+        order.setShippingName(request.shippingAddress().fullName());
+        order.setShippingAddressLine(request.shippingAddress().addressLine());
+        order.setShippingApartment(request.shippingAddress().apartment());
+        order.setShippingCity(request.shippingAddress().city());
+        order.setShippingState(request.shippingAddress().state());
+        order.setShippingZip(request.shippingAddress().zip());
+        order.setShippingCountry("USA");
+
         order.setShippingCost(request.shippingCost());
         order.setFreeShippingApplied(request.freeShippingApplied());
         order.setShippingSize(request.shippingSize());
+
         order.setTotal(request.total());
         order.setCreatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.WAITING_PAYMENT);
         handleUserForOrder(request, order);
+
         Order savedOrder = orderRepository.save(order);
 
         items.forEach(item -> item.setOrder(savedOrder));
@@ -113,12 +127,16 @@ public class OrderService {
 
         return new OrderResponse(
                 savedOrder.getId(),
-                savedOrder.getFullName(),
                 savedOrder.getEmail(),
-                savedOrder.getAddress(),
-                savedOrder.getCity(),
-                savedOrder.getState(),
-                savedOrder.getTotal(),
+                new AddressDto(
+                        savedOrder.getShippingName(),
+                        savedOrder.getShippingAddressLine(),
+                        savedOrder.getShippingApartment(),
+                        savedOrder.getShippingCity(),
+                        savedOrder.getShippingState(),
+                        savedOrder.getShippingZip(),
+                        savedOrder.getShippingCountry()
+                ),
                 savedOrder.getReceiptUrl(),
                 savedOrder.getStatus(),
                 savedOrder.getCreatedAt()
@@ -143,6 +161,9 @@ public class OrderService {
 
         String body = buildOrderConfirmationBody(order, items);
         emailService.sendSimpleMail(order.getEmail(), "Thanks for your order!", body);
+
+        String bodyForOwner = buildOwnerNotificationBody(order, items);
+        emailService.sendSimpleMail("mrdiego0892@gmail.com", "New Order in OnePokeCard!", bodyForOwner);
 
         orderRepository.save(order);
     }
@@ -178,14 +199,17 @@ public class OrderService {
 
         return new OrderDetailResponse(
                 order.getId(),
-                order.getFullName(),
                 order.getEmail(),
-                order.getAddress(),
-                order.getApartment(),
-                order.getCity(),
-                order.getState(),
-                order.getZip(),
                 order.getPhone(),
+                new AddressDto(
+                        order.getShippingName(),
+                        order.getShippingAddressLine(),
+                        order.getShippingApartment(),
+                        order.getShippingCity(),
+                        order.getShippingState(),
+                        order.getShippingZip(),
+                        order.getShippingCountry()
+                ),
                 order.getShippingSize().toString(),
                 order.getShippingCost(),
                 order.isFreeShippingApplied(),
@@ -211,24 +235,23 @@ public class OrderService {
             userRepository.findById(request.userId()).ifPresent(order::setUser);
         } else {
             Optional<User> existing = userRepository.findByEmail(request.email());
-            if (existing.isPresent()) {
-                order.setUser(existing.get());
-            } else {
-                User newUser = new User();
-                newUser.setEmail(request.email());
-                String[] nameParts = Optional.ofNullable(request.fullName()).orElse("").split(" ", 2);
-                newUser.setName(nameParts[0]);
-                newUser.setLastName(nameParts.length > 1 ? nameParts[1] : "");
-                newUser.setPassword("");
-                newUser.setPhone(request.phone());
-                newUser.setRole(Role.USER.name());
-                userRepository.save(newUser);
-                order.setUser(newUser);
-            }
+            existing.ifPresent(order::setUser);
         }
     }
 
     private OrderItem mapToOrderItem(CartItemDto cartItemDto) {
+        OrderItem item = mapBasicOrderItemDetails(cartItemDto);
+
+        if ("single".equalsIgnoreCase(cartItemDto.getPresentation())) {
+            handleSingleCardStock(cartItemDto);
+        } else {
+            handleProductStock(cartItemDto);
+        }
+
+        return item;
+    }
+
+    private OrderItem mapBasicOrderItemDetails(CartItemDto cartItemDto) {
         OrderItem item = new OrderItem();
         item.setProductOrCardForSaleId(cartItemDto.getProductOrCardForSaleId());
         item.setName(cartItemDto.getName());
@@ -237,32 +260,35 @@ public class OrderService {
         item.setFranchise(cartItemDto.getFranchise());
         item.setQuantity(cartItemDto.getQuantity());
         item.setPrice(cartItemDto.getPrice());
-
-        if ("single".equalsIgnoreCase(cartItemDto.getPresentation())) {
-            cardForSaleRepository.findById(cartItemDto.getProductOrCardForSaleId())
-                    .map(card -> {
-                        if (card.getStock() < cartItemDto.getQuantity()) {
-                            throw new InsufficientStockException("Not enough stock for card: " + card.getId());
-                        }
-                        card.setStock(card.getStock() - cartItemDto.getQuantity());
-                        if (card.getStock() == 0) card.setStatus(Status.INACTIVE);
-                        return cardForSaleRepository.save(card);
-                    })
-                    .orElseThrow(() -> new InsufficientStockException("Card not found: " + cartItemDto.getProductOrCardForSaleId()));
-        } else {
-            productRepository.findById(cartItemDto.getProductOrCardForSaleId())
-                    .map(product -> {
-                        if (product.getStock() < cartItemDto.getQuantity()) {
-                            throw new InsufficientStockException("Not enough stock for product: " + product.getProductId());
-                        }
-                        product.setStock(product.getStock() - cartItemDto.getQuantity());
-                        if (product.getStock() == 0) product.setStatus(Status.INACTIVE);
-                        return productRepository.save(product);
-                    })
-                    .orElseThrow(() -> new InsufficientStockException("Product not found: " + cartItemDto.getProductOrCardForSaleId()));
-        }
-
         return item;
+    }
+
+    private void handleSingleCardStock(CartItemDto cartItemDto) {
+        cardForSaleRepository.findById(cartItemDto.getProductOrCardForSaleId())
+                .map(card -> {
+                    validateStock(card.getStock(), cartItemDto.getQuantity(), "card", card.getId());
+                    card.setStock(card.getStock() - cartItemDto.getQuantity());
+                    if (card.getStock() == 0) card.setStatus(Status.INACTIVE);
+                    return cardForSaleRepository.save(card);
+                })
+                .orElseThrow(() -> new InsufficientStockException("Card not found: " + cartItemDto.getProductOrCardForSaleId()));
+    }
+
+    private void handleProductStock(CartItemDto cartItemDto) {
+        productRepository.findById(cartItemDto.getProductOrCardForSaleId())
+                .map(product -> {
+                    validateStock(product.getStock(), cartItemDto.getQuantity(), "product", product.getProductId());
+                    product.setStock(product.getStock() - cartItemDto.getQuantity());
+                    if (product.getStock() == 0) product.setStatus(Status.INACTIVE);
+                    return productRepository.save(product);
+                })
+                .orElseThrow(() -> new InsufficientStockException("Product not found: " + cartItemDto.getProductOrCardForSaleId()));
+    }
+
+    private void validateStock(int availableStock, int requestedQuantity, String type, Object id) {
+        if (availableStock < requestedQuantity) {
+            throw new InsufficientStockException("Not enough stock for " + type + ": " + id);
+        }
     }
 
 }

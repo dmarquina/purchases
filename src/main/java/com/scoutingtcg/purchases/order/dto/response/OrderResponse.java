@@ -1,18 +1,15 @@
-package com.scoutingtcg.purchases.order.dto;
+package com.scoutingtcg.purchases.order.dto.response;
 
 
 import com.scoutingtcg.purchases.order.model.OrderStatus;
+import com.scoutingtcg.purchases.shared.dto.AddressDto;
 
 import java.time.LocalDateTime;
 
 public record OrderResponse(
         String id,
-        String fullName,
         String email,
-        String address,
-        String city,
-        String state,
-        Double total,
+        AddressDto shippingAddress,
         String receiptUrl,
         OrderStatus status,
         LocalDateTime createdAt

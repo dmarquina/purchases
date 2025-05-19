@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "User", description = "The User Api")
 @RestController
-@Slf4j
-@AllArgsConstructor
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping(value = "/login")
     public LoggedUserResponse login(@RequestBody LoginUserRequest loginUserRequest) {

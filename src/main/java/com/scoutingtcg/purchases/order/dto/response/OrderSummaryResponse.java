@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.order.dto;
+package com.scoutingtcg.purchases.order.dto.response;
 
 import com.scoutingtcg.purchases.order.model.OrderStatus;
 import lombok.AllArgsConstructor;

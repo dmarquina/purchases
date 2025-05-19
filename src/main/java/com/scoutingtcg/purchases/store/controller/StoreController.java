@@ -15,10 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/store")
 public class StoreController {
 
-    private final ProductService productService;
     private final StoreService storeService;
-    public StoreController(ProductService productService, StoreService storeService, PokemonCardPriceService pokemonCardPriceService) {
-        this.productService = productService;
+    public StoreController(StoreService storeService, PokemonCardPriceService pokemonCardPriceService) {
         this.storeService = storeService;
     }
 
@@ -34,7 +32,7 @@ public class StoreController {
             @RequestParam(defaultValue = "50") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return productService.getSealedProducts(franchise, pageable);
+        return storeService.getSealedProducts(franchise, pageable);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.scoutingtcg.purchases.pokemoncard.dto;
+package com.scoutingtcg.purchases.pokemoncard.dto.response;
 
 import com.scoutingtcg.purchases.shared.model.SetOption;
 

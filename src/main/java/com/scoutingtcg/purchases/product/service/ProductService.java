@@ -6,8 +6,6 @@ import com.scoutingtcg.purchases.product.repository.ProductRepository;
 import com.scoutingtcg.purchases.shared.integration.S3ClientService;
 import com.scoutingtcg.purchases.shared.model.ShippingSize;
 import com.scoutingtcg.purchases.shared.model.Status;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,9 +34,6 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    public Page<Product> getSealedProducts(String franchise, Pageable pageable) {
-        return productRepository.findByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", pageable, 0);
-    }
 
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);

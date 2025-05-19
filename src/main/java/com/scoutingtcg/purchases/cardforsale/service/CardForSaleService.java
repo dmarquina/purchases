@@ -3,10 +3,14 @@ package com.scoutingtcg.purchases.cardforsale.service;
 import com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithPokemonCardDto;
 import com.scoutingtcg.purchases.cardforsale.model.CardForSale;
 import com.scoutingtcg.purchases.cardforsale.repository.CardForSaleRepository;
-import com.scoutingtcg.purchases.pokemoncard.dto.*;
+import com.scoutingtcg.purchases.pokemoncard.dto.response.PokemonFilterOptionsResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.response.PokemonSingleResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.response.PokemonSingleVariantResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.request.PokemonSinglesFilterRequest;
 import com.scoutingtcg.purchases.pokemoncard.model.PokemonCard;
 import com.scoutingtcg.purchases.pokemoncard.repository.PokemonCardRepository;
 import com.scoutingtcg.purchases.pokemoncard.service.PokemonCardPriceService;
+import com.scoutingtcg.purchases.shared.dto.PageResponse;
 import com.scoutingtcg.purchases.shared.model.Franchise;
 import com.scoutingtcg.purchases.shared.model.SetOption;
 import com.scoutingtcg.purchases.shared.model.Status;
@@ -101,7 +105,7 @@ public class CardForSaleService {
      * @param pageable The pagination information.
      * @return A response object containing the filtered Pokémon cards.
      */
-    public PokemonSinglesPageResponse getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
+    public PageResponse<PokemonSingleResponse> getPokemonSingles(PokemonSinglesFilterRequest filters, Pageable pageable) {
         Page<String> pagedCardIds = cardForSaleRepository.findFilteredCardIdsWithPagination(
                 filters.sets().isEmpty() ? null : filters.sets(),
                 filters.conditions().isEmpty() ? null : filters.conditions(),
@@ -111,10 +115,10 @@ public class CardForSaleService {
         );
 
         List<String> cardIds = pagedCardIds.getContent();
-        List<CardForSaleWithPokemonCardDto> data = cardForSaleRepository.findByCardIdIn(cardIds);
-        List<PokemonSingleResponse> responses = getPokemonSingleResponses(data);
+        List<CardForSaleWithPokemonCardDto> cfsWPokemonCardDto = cardForSaleRepository.findByCardIdIn(cardIds);
+        List<PokemonSingleResponse> responses = getPokemonSingleResponses(cfsWPokemonCardDto);
 
-        return new PokemonSinglesPageResponse(
+        return new PageResponse<>(
                 responses,
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -188,16 +192,16 @@ public class CardForSaleService {
         }
     }
 
-    private static List<PokemonSingleResponse> getPokemonSingleResponses(List<CardForSaleWithPokemonCardDto> data) {
-        Map<String, List<CardForSaleWithPokemonCardDto>> grouped = data.stream()
+    private static List<PokemonSingleResponse> getPokemonSingleResponses(List<CardForSaleWithPokemonCardDto> cfsWPokemonCardDto) {
+        Map<String, List<CardForSaleWithPokemonCardDto>> dtoGroupedByCfsId = cfsWPokemonCardDto.stream()
                 .collect(Collectors.groupingBy(dto -> dto.getCardForSale().getCardId()));
 
-        return grouped.entrySet().stream()
-                .map(entry -> {
-                    CardForSaleWithPokemonCardDto base = entry.getValue().get(0);
+        return dtoGroupedByCfsId.values().stream()
+                .map(dtoGrouped -> {
+                    CardForSaleWithPokemonCardDto base = dtoGrouped.get(0);
                     PokemonCard card = base.getPokemonCard();
 
-                    List<PokemonSingleVariantResponse> variants = entry.getValue().stream()
+                    List<PokemonSingleVariantResponse> variants = dtoGrouped.stream()
                             .map(dto -> {
                                 CardForSale cfs = dto.getCardForSale();
                                 return new PokemonSingleVariantResponse(

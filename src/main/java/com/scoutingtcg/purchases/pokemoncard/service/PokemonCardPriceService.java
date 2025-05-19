@@ -2,7 +2,7 @@ package com.scoutingtcg.purchases.pokemoncard.service;
 
 import com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithPokemonCardDto;
 import com.scoutingtcg.purchases.cardforsale.model.CardForSale;
-import com.scoutingtcg.purchases.pokemoncard.dto.PokemonCardApiResponse;
+import com.scoutingtcg.purchases.pokemoncard.dto.api.PokemonCardApiResponse;
 import com.scoutingtcg.purchases.pokemoncard.dto.PokemonCardMarketPriceDto;
 import com.scoutingtcg.purchases.pokemoncard.model.PokemonCardMarketPrice;
 import com.scoutingtcg.purchases.pokemoncard.repository.PokemonCardMarketPriceRepository;
