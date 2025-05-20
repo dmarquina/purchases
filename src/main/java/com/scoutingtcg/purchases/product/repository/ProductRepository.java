@@ -13,6 +13,6 @@ public interface ProductRepository
 
     List<Product> findTop5ByFranchiseAndPresentationNotAndStockGreaterThan(Franchise franchise, String presentation, int stock);
 
-    Page<Product> findByFranchiseAndPresentationNotAndStockGreaterThan(String franchise, String presentation, Pageable pageable, int stock);
+    Page<Product> findByFranchiseAndPresentationNotAndStockGreaterThan(Franchise franchise, String presentation, Pageable pageable, int stock);
 
 }

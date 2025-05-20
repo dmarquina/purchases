@@ -1,10 +1,12 @@
 package com.scoutingtcg.purchases.store.controller;
 
 import com.scoutingtcg.purchases.product.dto.StoreProductResponse;
+import com.scoutingtcg.purchases.shared.dto.PageResponse;
 import com.scoutingtcg.purchases.shared.model.Franchise;
 import com.scoutingtcg.purchases.product.model.Product;
 import com.scoutingtcg.purchases.pokemoncard.service.PokemonCardPriceService;
 import com.scoutingtcg.purchases.product.service.ProductService;
+import com.scoutingtcg.purchases.shared.util.PageUtils;
 import com.scoutingtcg.purchases.store.service.StoreService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,13 +28,13 @@ public class StoreController {
     }
 
     @GetMapping("/franchise/{franchise}/sealed")
-    public Page<Product> getSealedProducts(
-            @PathVariable String franchise,
+    public PageResponse<Product> getSealedProducts(
+            @PathVariable Franchise franchise,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return storeService.getSealedProducts(franchise, pageable);
+        return PageUtils.toPageResponse(storeService.getSealedProducts(franchise, pageable));
     }
 
 }

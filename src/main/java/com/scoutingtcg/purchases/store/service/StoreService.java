@@ -39,7 +39,7 @@ public class StoreService {
      * @param pageable  The pagination information.
      * @return A page of sealed products.
      */
-    public Page<Product> getSealedProducts(String franchise, Pageable pageable) {
+    public Page<Product> getSealedProducts(Franchise franchise, Pageable pageable) {
         return productRepository.findByFranchiseAndPresentationNotAndStockGreaterThan(franchise, "Single", pageable, 0);
     }
 

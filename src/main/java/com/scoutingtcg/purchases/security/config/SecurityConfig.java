@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/login", "/users/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**", "/card-for-sale/**", "/orders/**", "/store/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/orders/**","/shipping/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/orders/**","/shipping/**","/card-for-sale/pokemon").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
