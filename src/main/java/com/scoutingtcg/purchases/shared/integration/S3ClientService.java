@@ -16,6 +16,8 @@ import java.io.InputStream;
 
 @Service
 public class S3ClientService {
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
 
     @Value("${aws.s3.access-key}")
     private String accessKey;
@@ -65,9 +67,10 @@ public class S3ClientService {
 
     public String uploadFile(String bucketName, String fileName, InputStream inputStream, String contentType) {
         try {
+            String keyPrefix = isProd() ? "" : "test/";
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(fileName)
+                    .key(keyPrefix+fileName)
                     .contentType(contentType)
                     .build();
 
@@ -111,4 +114,7 @@ public class S3ClientService {
         }
     }
 
+    private boolean isProd() {
+        return "prod".equalsIgnoreCase(activeProfile);
+    }
 }

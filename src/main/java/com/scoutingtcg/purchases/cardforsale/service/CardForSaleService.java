@@ -156,9 +156,7 @@ public class CardForSaleService {
 
     private CardForSale rowToCardForSale(CSVRecord row) {
         String name = row.get("Name").trim();
-        String rawSet = row.get("Set").trim();
-        String rawSetId = rawSet.split(":")[0].toLowerCase().trim();
-        String setId = rawSetId.replaceAll("(?<=\\D)0+(?=\\d)", "");
+        String setId = row.get("SetId").trim();
         String number = row.get("Card Number").trim().split("/")[0];
         String cardCondition = row.get("Condition").trim();
         String printing = row.get("Printing").trim();
