@@ -93,6 +93,7 @@ public interface CardForSaleRepository extends JpaRepository<CardForSale, Long> 
     List<CardForSaleWithPokemonCardDto> findNoPriceAndPendingCardForSaleWithPokemonCard(
     );
 
+    //TODO: Quitar el primer where
     @Query("""
                     SELECT c
                     FROM CardForSale c

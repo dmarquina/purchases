@@ -45,24 +45,41 @@ public class PokemonCardPriceService {
     }
 
     public void updateNoPriceAnPendingCardForSalePrices() {
+        logger.info("Starting update for cards with no price and pending status...");
+
         Set<String> setIds = extractSetIds(cardForSaleRepository.findNoPriceAndPendingCardForSaleWithPokemonCard());
+        logger.debug("Extracted set IDs: {}", setIds);
+
         List<PokemonCardMarketPriceDto> prices = getMarketPricesBySetIds(setIds);
+        logger.debug("Fetched market prices: {}", prices);
+
         savePricesToDatabase(prices);
+        logger.info("Saved market prices to the database.");
 
         List<CardForSale> cardForSales = cardForSaleRepository.findByPriceGreaterThanZeroAndStatusPending();
+        logger.debug("Fetched cards for sale with price greater than zero and pending status: {}", cardForSales);
+
         updateCardForSaleWithLatestPrices(cardForSales);
+        logger.info("Updated card prices for pending cards successfully.");
     }
 
     public void setCardForSalePrices(List<CardForSale> cardForSales) {
+        logger.info("Setting prices for {} cards for sale.", cardForSales.size());
         updateCardForSaleWithLatestPrices(cardForSales);
+        logger.info("Prices for cards for sale have been updated successfully.");
     }
 
     public void updateMarketPrices() {
+        logger.info("Starting market prices update...");
         try {
             Set<String> setIds = extractSetIds(cardForSaleRepository.findAllCardForSaleWithPokemonCard());
-            List<PokemonCardMarketPriceDto> prices = getMarketPricesBySetIds(setIds);
-            savePricesToDatabase(prices);
+            logger.debug("Extracted set IDs: {}", setIds);
 
+            List<PokemonCardMarketPriceDto> prices = getMarketPricesBySetIds(setIds);
+            logger.debug("Fetched market prices: {}", prices);
+
+            savePricesToDatabase(prices);
+            logger.info("Market prices update completed successfully.");
         } catch (Exception e) {
             logger.error("Failed to update market prices", e);
             throw new RuntimeException("Failed to update market prices", e);
@@ -70,6 +87,7 @@ public class PokemonCardPriceService {
     }
 
     private List<PokemonCardMarketPriceDto> getMarketPricesBySetIds(Set<String> setIds) {
+        logger.info("Fetching market prices for set IDs: {}", setIds);
         List<PokemonCardMarketPriceDto> allPrices = new ArrayList<>();
 
         int page = 1;
@@ -77,20 +95,26 @@ public class PokemonCardPriceService {
 
         do {
             String url = buildApiUrl(setIds, page);
+            logger.debug("Fetching data from URL: {}", url);
             ResponseEntity<PokemonCardApiResponse> response = fetchApiResponse(url);
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                logger.error("Failed to fetch Pokémon TCG data. Status: {}", response.getStatusCode());
                 throw new IllegalStateException("Failed to fetch Pokémon TCG data. Status: " + response.getStatusCode());
             }
             PokemonCardApiResponse body = Objects.requireNonNull(response.getBody(), "Pokémon TCG API response is null.");
+            logger.debug("Received response for page {}: {}", page, body);
 
             List<PokemonCardMarketPriceDto> pagePrices = extractPricesFromResponse(body);
+            logger.debug("Extracted prices from response: {}", pagePrices);
             allPrices.addAll(pagePrices);
 
             totalPages = (int) Math.ceil((double) body.totalCount() / PAGE_SIZE);
+            logger.debug("Total pages: {}, Current page: {}", totalPages, page);
             page++;
 
         } while (page <= totalPages);
 
+        logger.info("Successfully fetched market prices for all pages.");
         return allPrices;
     }
 
@@ -163,33 +187,45 @@ public class PokemonCardPriceService {
     }
 
     private void updateCardForSaleWithLatestPrices(List<CardForSale> cardForSales) {
+        logger.info("Starting update for {} cards for sale.", cardForSales.size());
 
         List<PokemonCardMarketPrice> cardMarketPricesStored = priceRepository.findAllById(
                 cardForSales.stream()
                         .map(CardForSale::getCardId)
                         .collect(Collectors.toSet())
         );
+        logger.debug("Fetched {} market prices from the database.", cardMarketPricesStored.size());
 
         Map<String, Map<String, Double>> priceMapByCardId = cardMarketPricesStored.stream()
                 .collect(Collectors.toMap(PokemonCardMarketPrice::getCardId, PokemonCardMarketPrice::getPrices));
+        logger.debug("Constructed price map by card ID: {}", priceMapByCardId);
 
         for (CardForSale cardForSale : cardForSales) {
             String cardId = cardForSale.getCardId();
+            logger.debug("Processing card for sale with ID: {}", cardId);
+
             if (priceMapByCardId.containsKey(cardId)) {
                 Map<String, Double> pricesMap = priceMapByCardId.get(cardId);
                 String cardPrinting = cardForSale.getPrinting().toLowerCase();
+                logger.debug("Card printing: {}, Prices map: {}", cardPrinting, pricesMap);
+
                 if (pricesMap != null && pricesMap.keySet().stream().anyMatch(key -> key.contains(cardPrinting))) {
                     Double price = pricesMap.get(cardPrinting);
+                    logger.debug("Found price: {} for card ID: {}", price, cardId);
+
                     if (price != null && price > 0 && cardForSale.getPrice() < price) {
-                        cardForSale.setPrice(Math.floor(price * 0.95 * 100.0) / 100.0);
+                        double updatedPrice = Math.floor(price * 0.95 * 100.0) / 100.0;
+                        logger.info("Updating price for card ID: {} from {} to {}", cardId, cardForSale.getPrice(), updatedPrice);
+                        cardForSale.setPrice(updatedPrice);
                     }
                 }
-
-
+            } else {
+                logger.warn("No market price found for card ID: {}", cardId);
             }
         }
 
         cardForSaleRepository.saveAll(cardForSales);
+        logger.info("Successfully updated prices for {} cards for sale.", cardForSales.size());
     }
 
     private PokemonCardMarketPrice mapToEntity(PokemonCardMarketPriceDto dto) {

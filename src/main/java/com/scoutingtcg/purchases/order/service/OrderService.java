@@ -12,6 +12,7 @@ import com.scoutingtcg.purchases.order.model.OrderItem;
 import com.scoutingtcg.purchases.order.model.OrderStatus;
 import com.scoutingtcg.purchases.order.repository.OrderItemRepository;
 import com.scoutingtcg.purchases.order.repository.OrderRepository;
+import com.scoutingtcg.purchases.pokemoncard.service.PokemonCardPriceService;
 import com.scoutingtcg.purchases.product.repository.ProductRepository;
 import com.scoutingtcg.purchases.security.model.Role;
 import com.scoutingtcg.purchases.security.model.User;
@@ -21,6 +22,8 @@ import com.scoutingtcg.purchases.shared.exceptionhandler.InsufficientStockExcept
 import com.scoutingtcg.purchases.shared.integration.EmailService;
 import com.scoutingtcg.purchases.shared.integration.S3ClientService;
 import com.scoutingtcg.purchases.shared.model.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,6 +51,8 @@ public class OrderService {
     private final S3ClientService s3ClientService;
     private final EmailService emailService;
 
+    private static final Logger logger = LoggerFactory.getLogger(PokemonCardPriceService.class);
+
     public OrderService(OrderRepository orderRepository,
                         UserRepository userRepository,
                         OrderItemRepository orderItemRepository,
@@ -66,30 +71,39 @@ public class OrderService {
 
     public List<CartItemDto> checkStockAvailability(List<CartItemDto> cartItems) {
         List<CartItemDto> unavailable = new ArrayList<>();
+        logger.info("Checking stock availability for {} cart items", cartItems.size());
 
         for (CartItemDto item : cartItems) {
+            logger.debug("Checking stock for item: {}", item);
             if ("single".equalsIgnoreCase(item.getPresentation())) {
                 cardForSaleRepository.findById(item.getProductOrCardForSaleId()).ifPresentOrElse(card -> {
                     if (card.getStock() < item.getQuantity()) {
+                        logger.warn("Insufficient stock for card ID {}: requested {}, available {}",
+                                card.getId(), item.getQuantity(), card.getStock());
                         item.setStock(card.getStock());
                         unavailable.add(item);
                     }
                 }, () -> {
+                    logger.warn("Card not found for ID {}", item.getProductOrCardForSaleId());
                     item.setStock(0);
                     unavailable.add(item);
                 });
             } else {
                 productRepository.findById(item.getProductOrCardForSaleId()).ifPresentOrElse(product -> {
                     if (product.getStock() < item.getQuantity()) {
+                        logger.warn("Insufficient stock for product ID {}: requested {}, available {}",
+                                product.getProductId(), item.getQuantity(), product.getStock());
                         item.setStock(product.getStock());
                         unavailable.add(item);
                     }
                 }, () -> {
+                    logger.warn("Product not found for ID {}", item.getProductOrCardForSaleId());
                     item.setStock(0);
                     unavailable.add(item);
                 });
             }
         }
+        logger.info("Stock check completed. {} items unavailable.", unavailable.size());
         return unavailable;
     }
 
@@ -144,28 +158,42 @@ public class OrderService {
     }
 
     public void uploadPayment(String orderId, MultipartFile file) {
+        logger.info("Starting uploadPayment for orderId: {}", orderId);
         String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
         String imageUrl;
         try {
             String receiptBucketName = s3ClientService.getReceiptsBucket();
+            logger.debug("Uploading file to S3 bucket: {}, fileName: {}", receiptBucketName, fileName);
             imageUrl = s3ClientService.uploadFile(receiptBucketName, fileName, file.getInputStream(), file.getContentType());
+            logger.info("File uploaded successfully. Image URL: {}", imageUrl);
         } catch (IOException e) {
+            logger.error("Error uploading file for orderId: {}", orderId, e);
             throw new RuntimeException(e);
         }
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    logger.error("Order not found for orderId: {}", orderId);
+                    return new RuntimeException("Order not found");
+                });
+
+        logger.info("Updating order with receipt URL and status. OrderId: {}", orderId);
         order.setReceiptUrl(imageUrl);
         order.setStatus(OrderStatus.PROCESSING_PAYMENT);
+
         List<OrderItemDto> items = orderItemRepository.findOrderDetailDtoByOrderId(orderId);
+        logger.debug("Retrieved {} order items for orderId: {}", items.size(), orderId);
 
         String body = buildOrderConfirmationBody(order, items);
         emailService.sendSimpleMail(order.getEmail(), "Thanks for your order!", body);
+        logger.info("Order confirmation email sent to: {}", order.getEmail());
 
         String bodyForOwner = buildOwnerNotificationBody(order, items);
         emailService.sendSimpleMail("mrdiego0892@gmail.com", "New Order in OnePokeCard!", bodyForOwner);
+        logger.info("Owner notification email sent for orderId: {}", orderId);
 
         orderRepository.save(order);
+        logger.info("Order updated and saved successfully. OrderId: {}", orderId);
     }
 
     public Page<OrderSummaryResponse> getAllOrderSummaries(Pageable pageable) {
