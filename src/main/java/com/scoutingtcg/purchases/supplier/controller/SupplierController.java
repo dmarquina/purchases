@@ -3,10 +3,12 @@ package com.scoutingtcg.purchases.supplier.controller;
 import com.scoutingtcg.purchases.supplier.service.SupplierService;
 import com.scoutingtcg.purchases.supplier.model.Supplier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/suppliers")
 public class SupplierController {

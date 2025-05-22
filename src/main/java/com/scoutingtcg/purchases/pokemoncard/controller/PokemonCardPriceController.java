@@ -1,10 +1,12 @@
 package com.scoutingtcg.purchases.pokemoncard.controller;
 
 import com.scoutingtcg.purchases.pokemoncard.service.PokemonCardPriceService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/prices")
 public class PokemonCardPriceController {

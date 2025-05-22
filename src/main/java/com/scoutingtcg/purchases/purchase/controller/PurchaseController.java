@@ -3,10 +3,12 @@ package com.scoutingtcg.purchases.purchase.controller;
 import com.scoutingtcg.purchases.purchase.model.Purchase;
 import com.scoutingtcg.purchases.purchase.service.PurchaseService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/purchases")
 public class PurchaseController {
