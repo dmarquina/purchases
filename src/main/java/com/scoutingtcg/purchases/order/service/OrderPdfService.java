@@ -105,7 +105,7 @@ public class OrderPdfService {
             productTable.addCell(new PdfPCell(new Phrase("Total", labelFont)));
 
             for (OrderItemDto item : orderDetailResponse.items()) {
-                productTable.addCell(new Phrase(item.name() + " (" + item.presentation() + " - " + item.franchise() + ")", bodyFont));
+                productTable.addCell(new Phrase(item.name() + " (" + item.presentation() + " - " + item.franchise().toLowerCase() + ")", bodyFont));
                 productTable.addCell(new Phrase("x" + item.quantity(), bodyFont));
                 productTable.addCell(new Phrase(String.format("$%.2f", item.price() * item.quantity()), bodyFont));
             }

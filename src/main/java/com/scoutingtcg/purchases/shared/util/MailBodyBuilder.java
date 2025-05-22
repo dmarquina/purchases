@@ -60,7 +60,7 @@ public class MailBodyBuilder {
         sb.append("🃏 Items:\n");
         for (OrderItemDto item : items) {
             sb.append("- ").append(item.name())
-                    .append(" x").append(item.quantity())
+                    .append(" (x").append(item.quantity()).append(")")
                     .append(" - $").append(String.format("%.2f", item.price() * item.quantity()))
                     .append("\n");
         }

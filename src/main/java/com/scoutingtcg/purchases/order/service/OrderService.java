@@ -1,5 +1,6 @@
 package com.scoutingtcg.purchases.order.service;
 
+import com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithDetailsDto;
 import com.scoutingtcg.purchases.cardforsale.repository.CardForSaleRepository;
 import com.scoutingtcg.purchases.order.dto.CartItemDto;
 import com.scoutingtcg.purchases.order.dto.OrderItemDto;
@@ -280,9 +281,25 @@ public class OrderService {
     }
 
     private OrderItem mapBasicOrderItemDetails(CartItemDto cartItemDto) {
+
+
         OrderItem item = new OrderItem();
         item.setProductOrCardForSaleId(cartItemDto.getProductOrCardForSaleId());
-        item.setName(cartItemDto.getName());
+        if ("single".equalsIgnoreCase(cartItemDto.getPresentation())
+                && "pokemon".equalsIgnoreCase(cartItemDto.getFranchise())) {
+            Optional<CardForSaleWithDetailsDto> csfdOp = cardForSaleRepository.findCardForSaleDetailsById(cartItemDto.getProductOrCardForSaleId());
+            if (csfdOp.isPresent()) {
+                CardForSaleWithDetailsDto cfsd = csfdOp.get();
+                String name = cfsd.getName()
+                        + " #" + cfsd.getNumber()
+                        + " - " + cfsd.getSetName()
+                        + " - " + cfsd.getRarity()
+                        + " - " + cfsd.getPrinting();
+                item.setName(name);
+            }
+        } else {
+            item.setName(cartItemDto.getName());
+        }
         item.setImage(cartItemDto.getImage());
         item.setPresentation(cartItemDto.getPresentation());
         item.setFranchise(cartItemDto.getFranchise());

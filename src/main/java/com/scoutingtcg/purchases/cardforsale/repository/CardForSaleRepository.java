@@ -1,5 +1,6 @@
 package com.scoutingtcg.purchases.cardforsale.repository;
 
+import com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithDetailsDto;
 import com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithPokemonCardDto;
 import com.scoutingtcg.purchases.cardforsale.model.CardForSale;
 import com.scoutingtcg.purchases.shared.model.Franchise;
@@ -103,5 +104,13 @@ public interface CardForSaleRepository extends JpaRepository<CardForSale, Long> 
             """)
     List<CardForSale> findByPriceGreaterThanZeroAndStatusPending();
 
+    @Query("""
+            SELECT new com.scoutingtcg.purchases.cardforsale.dto.CardForSaleWithDetailsDto(
+                csf.id, csf.printing, pc.name, pc.number, pc.rarity, pc.setName)
+            FROM CardForSale csf
+            JOIN PokemonCard pc ON pc.id = csf.cardId
+            WHERE csf.id = :id
+        """)
+    Optional<CardForSaleWithDetailsDto> findCardForSaleDetailsById(@Param("id") Long id);
 
 }
