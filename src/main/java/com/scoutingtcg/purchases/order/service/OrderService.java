@@ -215,6 +215,10 @@ public class OrderService {
             throw new IllegalStateException("Invalid status transition from " + currentStatus + " to " + newStatus);
         }
 
+        if (newStatus.equals(OrderStatus.CANCELED)) {
+            restoreStockForCanceledOrder(orderId);
+        }
+
         order.setStatus(newStatus);
         orderRepository.save(order);
     }
@@ -336,4 +340,21 @@ public class OrderService {
         }
     }
 
+    private void restoreStockForCanceledOrder(String orderId) {
+        orderItemRepository.findOrderItemDtoByOrderId(orderId).forEach(item -> {
+            if ("single".equalsIgnoreCase(item.presentation())) {
+                cardForSaleRepository.findById(item.productOrCardForSaleId()).ifPresent(card -> {
+                    if (card.getStock() == 0) card.setStatus(Status.ACTIVE);
+                    card.setStock(card.getStock() + item.quantity());
+                    cardForSaleRepository.save(card);
+                });
+            } else {
+                productRepository.findById(item.productOrCardForSaleId()).ifPresent(product -> {
+                    if (product.getStock() == 0) product.setStatus(Status.ACTIVE);
+                    product.setStock(product.getStock() + item.quantity());
+                    productRepository.save(product);
+                });
+            }
+        });
+    }
 }
