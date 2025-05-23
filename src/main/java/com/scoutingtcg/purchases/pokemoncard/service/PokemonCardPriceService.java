@@ -206,17 +206,26 @@ public class PokemonCardPriceService {
 
             if (priceMapByCardId.containsKey(cardId)) {
                 Map<String, Double> pricesMap = priceMapByCardId.get(cardId);
-                String cardPrinting = cardForSale.getPrinting().toLowerCase();
+                String cardPrinting = cardForSale.getPrinting();
                 logger.debug("Card printing: {}, Prices map: {}", cardPrinting, pricesMap);
 
                 if (pricesMap != null && pricesMap.keySet().stream().anyMatch(key -> key.contains(cardPrinting))) {
                     Double price = pricesMap.get(cardPrinting);
                     logger.debug("Found price: {} for card ID: {}", price, cardId);
 
-                    if (price != null && price > 0 && cardForSale.getPrice() < price) {
+                    if (price != null && price > 0) {
                         double updatedPrice = Math.floor(price * 0.95 * 100.0) / 100.0;
-                        logger.info("Updating price for card ID: {} from {} to {}", cardId, cardForSale.getPrice(), updatedPrice);
-                        cardForSale.setPrice(updatedPrice);
+                        if (cardForSale.getPrice() < 10) {
+                            logger.info("Updating price for card ID: {} from {} to {}", cardId, cardForSale.getPrice(), updatedPrice);
+                            cardForSale.setPrice(updatedPrice);
+                        } else {
+                            if (cardForSale.getPrice() < updatedPrice) {
+                                logger.info("Updating price for card ID: {} from {} to {}", cardId, cardForSale.getPrice(), updatedPrice);
+                                cardForSale.setPrice(updatedPrice);
+                            }
+                        }
+                    } else {
+                        logger.debug("No price update needed for card ID: {}. Current price: {}, New price: {}", cardId, cardForSale.getPrice(), price);
                     }
                 }
             } else {

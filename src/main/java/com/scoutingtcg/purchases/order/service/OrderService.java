@@ -256,6 +256,7 @@ public class OrderService {
 
     private boolean isValidTransition(OrderStatus current, OrderStatus next) {
         return switch (current) {
+            case WAITING_PAYMENT -> next == OrderStatus.PROCESSING_PAYMENT || next == OrderStatus.CANCELED;
             case PROCESSING_PAYMENT -> next == OrderStatus.PAID || next == OrderStatus.CANCELED;
             case PAID -> next == OrderStatus.SHIPPED || next == OrderStatus.REFUNDED;
             case SHIPPED -> next == OrderStatus.COMPLETED;
