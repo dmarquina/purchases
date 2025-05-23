@@ -209,7 +209,9 @@ public class PokemonCardPriceService {
                 String cardPrinting = cardForSale.getPrinting();
                 logger.debug("Card printing: {}, Prices map: {}", cardPrinting, pricesMap);
 
-                if (pricesMap != null && pricesMap.keySet().stream().anyMatch(key -> key.contains(cardPrinting))) {
+                if (pricesMap != null
+                        && pricesMap.keySet().stream().anyMatch(
+                        key -> key.contains(cardPrinting))) {
                     Double price = pricesMap.get(cardPrinting);
                     logger.debug("Found price: {} for card ID: {}", price, cardId);
 

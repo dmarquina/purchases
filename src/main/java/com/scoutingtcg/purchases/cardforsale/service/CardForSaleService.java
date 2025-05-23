@@ -159,7 +159,7 @@ public class CardForSaleService {
         String setId = row.get("SetId").trim();
         String number = row.get("Card Number").trim().split("/")[0];
         String cardCondition = row.get("Condition").trim();
-        String printing = row.get("Printing").trim();
+        String printing = formatPrinting(row.get("Printing").trim());
         int quantity = Integer.parseInt(row.get("Quantity"));
 
         String pokemonCardId = setId + "-" + Integer.parseInt(number);
@@ -226,5 +226,17 @@ public class CardForSaleService {
                 .toList();
     }
 
+    private String formatPrinting(String printing) {
+        if (printing == null) {
+            return null;
+        }
+        printing = printing.trim().toLowerCase();
+        return switch (printing) {
+            case "normal" -> "normal";
+            case "holofoil" -> "holofoil";
+            case "reverseholo", "reverseholofoil" -> "reverseHolofoil";
+            default -> printing;
+        };
+    }
 
 }
